@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  backend:
+    restart: always
+    build: ./FAVDES
+    expose:
+      - "8000"
+    volumes:
+      - ./FAVDES:/code
+    environment:
+      POSTGRES_HOST: 'postgres'
+    command: python /code/manage.py runserver 0.0.0.0:8000
+    networks:
+      - app-network
+
+  nginx:
+    restart: always
+    image: nginx:latest
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data/nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - app-network
+
+  postgres:
+    restart: always
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/pgdata:/var/lib/postgresql/data/
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
