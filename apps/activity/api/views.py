@@ -72,8 +72,8 @@ class ActivityViewSet(viewsets.ModelViewSet):
         user = self.request.user
         target_id = self.request.GET.get('target')
         target_content_id = self.request.GET.get('target_content')
-        destination_id = self.request.GET.get('place')
-        point_id = self.request.GET.get('place')
+        destination_id = self.request.GET.get('destination')
+        point_id = self.request.GET.get('point')
         if destination_id:
             addresses = Address.objects.filter(points__destination__id=destination_id)
             q_and = q_and & Q(
@@ -96,36 +96,37 @@ class ActivityViewSet(viewsets.ModelViewSet):
                 actor_object_id=target_id
             )
             q_and = q_and & q_temp
-        if user.is_authenticated and target_id is None and target_content_id is None and point_id is None and destination_id is None:
+        if target_id is None and target_content_id is None and point_id is None and destination_id is None:
             # Lấy những activty target đến current_user
-            q_or = q_or | Q(
-                target_content_type=ContentType.objects.get_for_model(user),
-                target_object_id=user.pk
-            ) | Q(
-                action_object_content_type=ContentType.objects.get_for_model(user),
-                action_object_object_id=user.pk
-            ) | Q(
-                actor_content_type=ContentType.objects.get_for_model(user),
-                actor_object_id=user.pk
-            )
-            # Lấy danh sách follow bởi user
-            follows = models.Follow.objects.filter(user=user)
-            content_types = ContentType.objects.filter(
-                pk__in=follows.values('content_type_id')
-            )
-
-            for content_type in content_types:
-                object_ids = follows.filter(content_type=content_type)
+            if user.is_authenticated:
                 q_or = q_or | Q(
-                    actor_content_type=content_type,
-                    actor_object_id__in=object_ids.values('object_id')
+                    target_content_type=ContentType.objects.get_for_model(user),
+                    target_object_id=user.pk
                 ) | Q(
-                    target_content_type=content_type,
-                    target_object_id__in=object_ids.filter(actor_only=False).values('object_id')
+                    action_object_content_type=ContentType.objects.get_for_model(user),
+                    action_object_object_id=user.pk
                 ) | Q(
-                    action_object_content_type=content_type,
-                    action_object_object_id__in=object_ids.filter(actor_only=False).values('object_id')
+                    actor_content_type=ContentType.objects.get_for_model(user),
+                    actor_object_id=user.pk
                 )
+                # Lấy danh sách follow bởi user
+                follows = models.Follow.objects.filter(user=user)
+                content_types = ContentType.objects.filter(
+                    pk__in=follows.values('content_type_id')
+                )
+
+                for content_type in content_types:
+                    object_ids = follows.filter(content_type=content_type)
+                    q_or = q_or | Q(
+                        actor_content_type=content_type,
+                        actor_object_id__in=object_ids.values('object_id')
+                    ) | Q(
+                        target_content_type=content_type,
+                        target_object_id__in=object_ids.filter(actor_only=False).values('object_id')
+                    ) | Q(
+                        action_object_content_type=content_type,
+                        action_object_object_id__in=object_ids.filter(actor_only=False).values('object_id')
+                    )
 
         self.queryset = queryset.filter(q_or & q_and, **kwargs)
         return super(ActivityViewSet, self).list(request, *args, **kwargs)
