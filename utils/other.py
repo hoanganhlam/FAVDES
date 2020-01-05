@@ -31,6 +31,7 @@ def convert_location(name, address):
                 title=name
             )
         else:
+            destination.address = address
             destination.save()
     if check_inner(address.types, points):
         point = d_models.Point.objects.filter(slug=slug).first()
@@ -40,6 +41,7 @@ def convert_location(name, address):
                 title=name
             )
         else:
+            point.address = address
             point.save()
 
 
