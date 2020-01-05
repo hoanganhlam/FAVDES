@@ -2,7 +2,7 @@ from apps.activity import models
 from rest_framework import serializers
 from apps.media.api.serializers import MediaSerializer
 from apps.authentication.api.serializers import UserSerializer
-from apps.destination.api.serializers import AddressSerializer, DestinationSerializer, PointSerializer
+from apps.destination.api.serializers import DAddressSerializer, DestinationSerializer, PointSerializer
 
 
 class TaxonomySerializer(serializers.ModelSerializer):
@@ -40,7 +40,13 @@ class ActivitySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Activity
-        fields = ['id', 'actor', 'action_object', 'target', 'verb', 'created', 'is_voted', 'total_vote', 'slug']
+        fields = ['id', 'actor', 'action_object', 'target', 'verb', 'created', 'is_voted', 'total_vote', 'slug',
+                  'address']
+
+    def to_representation(self, instance):
+        self.fields['address'] = DAddressSerializer(read_only=True)
+
+        return super(ActivitySerializer, self).to_representation(instance)
 
     def get_is_voted(self, instance):
         user = self.context['request'].user

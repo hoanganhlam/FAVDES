@@ -101,7 +101,6 @@ def fetch_address_autocomplete(request):
     results = google_map_geo_coding(search)
     output = []
     for result in results:
-        # address = d_models.Address.objects.filter(place_id=result.get("place_id")).first()
         address = make_address(result)
         convert_location(address.formatted_address, address)
         output.append(address)

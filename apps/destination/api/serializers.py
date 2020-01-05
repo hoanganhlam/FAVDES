@@ -42,3 +42,22 @@ class SearchAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.SearchAddress
         fields = '__all__'
+
+
+class DAddressSerializer(serializers.ModelSerializer):
+    points = serializers.SerializerMethodField()
+    destination = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.Address
+        fields = '__all__'
+        extra_fields = ['points', 'destinations']
+
+    def get_points(self, instance):
+        return PointSerializer(instance.points.all(), many=True).data
+
+    def get_destinations(self, instance):
+        return DestinationSerializer(instance.points.all(), many=True).data
+
+    def get_field_names(self, declared_fields, info):
+        expanded_fields = super(DAddressSerializer, self).get_field_names(declared_fields, info)
