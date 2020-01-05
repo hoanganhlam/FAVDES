@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.contrib.auth.models import User
-from apps.authentication.api.serializers import UserSerializer, DetailSerializer, MeSerializer
+from apps.authentication.api.serializers import UserSerializer
 from allauth.socialaccount.providers.facebook.views import FacebookOAuth2Adapter
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from rest_auth.registration.views import SocialLoginView
@@ -11,6 +11,8 @@ from rest_framework import viewsets, permissions
 from base import pagination
 from rest_framework.filters import OrderingFilter
 from rest_framework_jwt.settings import api_settings
+from apps.authentication.models import Profile
+from apps.media.models import Media
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -26,15 +28,23 @@ class UserViewSet(viewsets.ModelViewSet):
     search_fields = ['first_name', 'last_name', 'username']
     lookup_field = 'username'
 
-    def retrieve(self, request, *args, **kwargs):
-        self.serializer_class = DetailSerializer
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
-
     def update(self, request, *args, **kwargs):
+        profile_raw = request.data.get("profile")
+        media = profile_raw.get("media") if profile_raw else None
+        avatar = None
+        if media:
+            avatar = Media.objects.get(pk=media)
         partial = kwargs.pop('partial', True)
         instance = self.get_object()
+        if hasattr(instance, 'profile'):
+            instance.profile.description = profile_raw.get("description") if profile_raw else None
+            instance.profile.media = avatar
+            instance.profile.save()
+        else:
+            profile = Profile(user=instance)
+            profile.description = profile_raw.get("description") if profile_raw else None
+            profile.media = avatar
+            profile.save()
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
@@ -55,7 +65,7 @@ class UserExt(views.APIView):
     @permission_classes((IsAuthenticated,))
     def get_request_user(request, format=None):
         user = User.objects.get(pk=request.user.id)
-        serializer = MeSerializer(user, context={'request': request})
+        serializer = UserSerializer(user, context={'request': request})
         response = serializer.data
         return Response(response, status=status.HTTP_200_OK)
 

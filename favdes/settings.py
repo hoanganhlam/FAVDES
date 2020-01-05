@@ -52,7 +52,8 @@ INSTALLED_APPS = [
     'apps.media',
     'apps.destination',
     'apps.worker',
-    'apps.activity'
+    'apps.activity',
+    'apps.authentication'
 ]
 
 MIDDLEWARE = [

@@ -1,24 +1,31 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from apps.authentication.models import Profile
 from rest_auth.registration.serializers import RegisterSerializer
+from apps.media.api.serializers import MediaSerializer
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['media', 'description']
+
+    def to_representation(self, instance):
+        self.fields['media'] = MediaSerializer(read_only=True)
+        return super(ProfileSerializer, self).to_representation(instance)
 
 
 class UserSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'username']
+        fields = ['first_name', 'last_name', 'username', 'profile']
 
-
-class DetailSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = '__all__'
-
-
-class MeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = '__all__'
+    def get_profile(self, instance):
+        if hasattr(instance, 'profile'):
+            return ProfileSerializer(instance.profile).data
+        return None
 
 
 class NameRegistrationSerializer(RegisterSerializer):
