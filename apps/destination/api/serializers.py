@@ -46,7 +46,7 @@ class SearchAddressSerializer(serializers.ModelSerializer):
 
 class DAddressSerializer(serializers.ModelSerializer):
     points = serializers.SerializerMethodField()
-    destination = serializers.SerializerMethodField()
+    destinations = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Address
