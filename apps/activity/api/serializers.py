@@ -45,7 +45,6 @@ class ActivitySerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         self.fields['address'] = DAddressSerializer(read_only=True)
-
         return super(ActivitySerializer, self).to_representation(instance)
 
     def get_is_voted(self, instance):
