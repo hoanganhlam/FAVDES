@@ -108,7 +108,7 @@ DATABASES = {
         'NAME': os.getenv('POSTGRES_DBNAME', 'favdes'),
         'USER': os.getenv('POSTGRES_USER', 'lam'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'trip.vn'),
-        'HOST': os.getenv('POSTGRES_HOST', '45.76.213.183'),
+        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }

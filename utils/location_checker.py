@@ -7,7 +7,15 @@ gmaps = googlemaps.Client(key='AIzaSyC1Oag_e1x8FECR7ESzNouS7kUENzKHE2s')
 def google_map_geo_coding(search):
     if search:
         # Geocoding an address
-        results = gmaps.geocode(search)
+        results = gmaps.geocode(search, language="en")
+        return results
+    return None
+
+
+def reverse_geocode_geo_coding(location):
+    if location:
+        # Geocoding an address
+        results = gmaps.reverse_geocode(location, language="en")
         return results
     return None
 
@@ -15,7 +23,7 @@ def google_map_geo_coding(search):
 def google_map_autocomplete(search):
     if search:
         # Geocoding an address
-        results = gmaps.places_autocomplete(search)
+        results = gmaps.places_autocomplete(search, language="en")
         return results
     return None
 

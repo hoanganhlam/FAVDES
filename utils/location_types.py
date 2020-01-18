@@ -14,6 +14,7 @@ destinations = [
 ]
 
 points = [
+    "street_address",
     "accounting"
     "airport",
     "amusement_park",

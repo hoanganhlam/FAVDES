@@ -33,15 +33,11 @@ class PostSerializer(serializers.ModelSerializer):
 class ActivitySerializer(serializers.ModelSerializer):
     is_voted = serializers.SerializerMethodField()
     total_vote = serializers.SerializerMethodField()
-    actor = serializers.SerializerMethodField()
-    action_object = serializers.SerializerMethodField()
-    target = serializers.SerializerMethodField()
     slug = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Activity
-        fields = ['id', 'actor', 'action_object', 'target', 'verb', 'created', 'is_voted', 'total_vote', 'slug',
-                  'address']
+        fields = ['id', 'verb', 'created', 'is_voted', 'total_vote', 'slug', 'address', 'temp']
 
     def to_representation(self, instance):
         self.fields['address'] = DAddressSerializer(read_only=True)
@@ -53,18 +49,6 @@ class ActivitySerializer(serializers.ModelSerializer):
 
     def get_total_vote(self, instance):
         return instance.voters.count()
-
-    def get_actor(self, instance):
-        return convert_serializer(instance.actor)
-
-    def get_action_object(self, instance):
-        return convert_serializer(instance.action_object)
-
-    def get_target(self, instance):
-        if instance.target:
-            return convert_serializer(instance.target)
-        else:
-            return convert_serializer(instance.address)
 
     def get_slug(self, instance):
         d_str = 'anywhere'
@@ -106,27 +90,27 @@ class CommentSerializer(serializers.ModelSerializer):
 def convert_serializer(instance):
     out = {}
     if instance:
-        if instance._meta.model.__name__ == "User":
+        if instance.__class__.__name__ == "User":
             out = UserSerializer(instance).data
-        elif instance._meta.model.__name__ == "Destination":
+        elif instance.__class__.__name__ == "Destination":
             out = DestinationSerializer(instance).data
-        elif instance._meta.model.__name__ == "Point":
+        elif instance.__class__.__name__ == "Point":
             out = PointSerializer(instance).data
-        elif instance._meta.model.__name__ == "Post":
+        elif instance.__class__.__name__ == "Post":
             out = PostSerializer(instance).data
-        elif instance._meta.model.__name__ == "Comment":
+        elif instance.__class__.__name__ == "Comment":
             out = CommentSerializer(instance).data
-        elif instance._meta.model.__name__ == "Address":
+        elif instance.__class__.__name__ == "Address":
             destination = instance.destinations.first()
             point = instance.points.first()
             if destination:
                 out = DestinationSerializer(destination).data
-                out["model_name"] = destination._meta.model.__name__
+                out["model_name"] = destination.__class__.__name__
             elif point:
                 out = PointSerializer(destination).data
-                out["model_name"] = point._meta.model.__name__
+                out["model_name"] = point.__class__.__name__
             return out
         if out:
-            out["model_name"] = instance._meta.model.__name__
+            out["model_name"] = instance.__class__.__name__
             return out
     return None

@@ -5,6 +5,7 @@ from apps.media.models import Media
 from apps.destination.models import Address
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.contrib.postgres.fields import JSONField, ArrayField
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
@@ -56,6 +57,8 @@ class Activity(interface.BaseModel):
 
     voters = models.ManyToManyField(User, blank=True, related_name='voted_activities')
     tagged = models.ManyToManyField(User, blank=True, related_name='tagged_activities')
+
+    temp = JSONField(null=True, blank=True)
 
     def __str__(self):
         ctx = {

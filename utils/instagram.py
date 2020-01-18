@@ -5,21 +5,28 @@ from apps.media.models import Media
 from django.core.files.temp import NamedTemporaryFile
 from urllib.request import urlopen, urlparse
 from django.core.files import File
+from datetime import datetime
 
 
 def get_instagram_by_tag(search, max_id=None):
-    user_name = 'lam.laca'
-    password = 'Hoanganhlam@no99'
+    user_name = 'hoanglamyeah'
+    password = 'Hoanganhlam@no1'
     api = Client(user_name, password)
     keyword = _slug_strip(vi_slug(search), separator="")
     if max_id:
         results = api.feed_tag(keyword, rank_token="08276948-21a8-11ea-8c58-acde48001122", max_id=max_id)
     else:
         results = api.feed_tag(keyword, rank_token="08276948-21a8-11ea-8c58-acde48001122")
-    # next_max_id = results.get('next_max_id')
-    # while next_max_id:
-    #     get_instagram_by_tag(search, max_id=next_max_id)
-    return list(map(extract_instagram, results.get("items")))
+    next_max_id = results.get('next_max_id')
+    print(next_max_id)
+    for item in results.get("items"):
+        extract_instagram(item)
+    if results.get("ranked_items"):
+        for item in results.get("ranked_items"):
+            extract_instagram(item)
+
+    while next_max_id:
+        get_instagram_by_tag(search, max_id=next_max_id)
 
 
 def get_instagram_users(search, max_id=None):
@@ -34,14 +41,12 @@ def get_instagram_users(search, max_id=None):
 
 
 def extract_instagram(item):
-    place = item.get("location")
     location = None
     if item.get("lat") is not None and item.get("lng") is not None:
         location = {
             "lat": item.get("lat"),
             "lng": item.get("lng")
         }
-
     caption = None if item.get("caption") is None else item.get("caption").get("text")
     user_raw = item.get("user")
     images = []
@@ -74,28 +79,21 @@ def extract_instagram(item):
             user=ig_user,
             caption=caption,
             coordinate=location,
+            time_posted=datetime.fromtimestamp(item.get("taken_at"))
         )
-        for image_url in images:
-            img_temp = NamedTemporaryFile(delete=True)
-            img_temp.write(urlopen(image_url).read())
-            name = urlparse(image_url).path.split('/')[-1]
+
+        for url in images:
+            temp = NamedTemporaryFile(delete=True)
+            temp.write(urlopen(url).read())
+            name = urlparse(url).path.split('/')[-1]
             ext = name.split('.')[-1]
             if ext in ['jpg', 'jpeg', 'png']:
-                img_temp.flush()
+                temp.flush()
                 img = Media(title=name)
-                img.path.save(name, File(img_temp))
+                img.path.save(name, File(temp))
                 ig_post.photos.add(img)
         ig_post.save()
-
-    return {
-        "id": item.get("pk"),
-        "created": item.get("taken_at"),
-        "caption": caption,
-        "user": user,
-        "images:": images,
-        "place": place,
-        "location": location
-    }
+    return ig_post
 
 
 def extract_ig_media(item):

@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'test', views.test),
     url(r'fetch-url', views.fetch_url),
+    url(r'fetch-place-reverse', views.reverse_geocode),
     url(r'fetch-place_photos', views.fetch_place_photos),
     url(r'fetch-address-autocomplete', views.fetch_address_autocomplete),
     url(r'fetch-address', views.fetch_address),

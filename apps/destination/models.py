@@ -15,6 +15,9 @@ class Address(interface.BaseModel):
     place_id = models.CharField(max_length=200, null=True, blank=True, unique=True)
     types = ArrayField(models.CharField(max_length=200), null=True, blank=True)
 
+    def __str__(self):
+        return self.formatted_address
+
 
 class SearchAddress(interface.BaseModel):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="searches")
@@ -23,16 +26,24 @@ class SearchAddress(interface.BaseModel):
     tracking_ip = models.CharField(max_length=50, null=True, blank=True)
     count = models.IntegerField(default=1)
 
+    def __str__(self):
+        return self.search_keyword
+
 
 class Destination(interface.BaseModel, interface.Taxonomy):
+    title = models.CharField(max_length=120)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="destinations")
     parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name='destinations')
     photos = models.ManyToManyField(Media, blank=True, related_name='destinations')
     contact = JSONField(null=True, blank=True)
 
+    def __str__(self):
+        return self.title
+
 
 class Point(interface.BaseModel, interface.Taxonomy):
+    title = models.CharField(max_length=120)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="points")
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name='points')
     destination = models.ForeignKey(
@@ -42,3 +53,6 @@ class Point(interface.BaseModel, interface.Taxonomy):
     photos = models.ManyToManyField(Media, blank=True, related_name='points')
     contact = JSONField(null=True, blank=True)
     services = ArrayField(JSONField(null=True, blank=True), null=True, blank=True)
+
+    def __str__(self):
+        return self.title

@@ -127,8 +127,15 @@ class ActivityViewSet(viewsets.ModelViewSet):
                         action_object_content_type=content_type,
                         action_object_object_id__in=object_ids.filter(actor_only=False).values('object_id')
                     )
-
         self.queryset = queryset.filter(q_or & q_and, **kwargs)
+        for item in self.queryset:
+            if item.temp is None:
+                item.temp = {
+                    "actor": serializers.convert_serializer(item.actor),
+                    "action_object": serializers.convert_serializer(item.action_object),
+                    "target": serializers.convert_serializer(item.target)
+                }
+                item.save()
         return super(ActivityViewSet, self).list(request, *args, **kwargs)
 
 
