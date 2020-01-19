@@ -1,5 +1,5 @@
 from apps.destination import models as d_models
-from utils.location_checker import google_map_geo_coding, get_place
+from utils.location_checker import google_map_geo_coding, get_place, get_address
 
 
 def get_client_ip(request):
@@ -59,25 +59,22 @@ def get_parent(ids):
         place = worker.get("result")
     current_address, c_result = make_address(place)
     parent = None
-    address = None
     formatted_address = place.get("formatted_address")
     formatted_address_arr = formatted_address.split(", ")
     length = len(formatted_address_arr)
     for i in range(length):
         address_text_search = ', '.join(map(str, formatted_address_arr[length - i:length]))
-        results = google_map_geo_coding(address_text_search)
-        if results is not None and len(results) > 0:
-            address, result = make_address(results[0])
-            if parent is not None and result.id != parent.id and parent.__class__.__name__ == "Destination":
-                if result.__class__.__name__ == "Destination":
+        if address_text_search:
+            results = get_address(address_text_search).get("results")
+            if results and len(results) > 0:
+                address, result = make_address(results[0])
+                if parent and result.id != parent.id:
                     result.parent = parent
                     result.save()
-            if result is not None:
-                parent = result
-    if parent is not None and c_result is not None and parent.__class__.__name__ == "Destination":
-        if parent.id == c_result.id:
-            return address
-        if c_result.__class__.__name__ == "Destination":
+                if result:
+                    parent = result
+    if parent and c_result:
+        if c_result.parent is None or (c_result.parent and c_result.parent.id != parent.id):
             c_result.parent = parent
-        c_result.save()
+            c_result.save()
     return current_address
