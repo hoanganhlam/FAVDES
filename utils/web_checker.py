@@ -91,8 +91,7 @@ def get_destinations(deep=0, e_id=36, offset=0, destination=None):
 
         photos = list(map(extract_lonely_image, images))
         destination = d_models.Destination.objects.filter(slug=slug).first()
-        point = d_models.Point.objects.filter(slug=slug).first()
-        if destination is None and point is None:
+        if destination is None:
             if deep == 0:
                 parent = None
                 ancestries = list(reversed(place.get("fieldPlcAncestry")))
@@ -133,12 +132,6 @@ def get_destinations(deep=0, e_id=36, offset=0, destination=None):
                         destination.photos.add(img)
                 destination.save()
                 get_destinations(deep=1, e_id=place.get("entityId"), destination=destination)
-            if deep == 1:
-                d_models.Point.objects.create(
-                    title=place.get("fieldPlcName"),
-                    slug=slug,
-                    destination=destination,
-                )
 
     while v_offset < count:
         v_offset = v_offset + limit

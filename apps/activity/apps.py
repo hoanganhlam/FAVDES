@@ -10,5 +10,5 @@ class ActivityConfig(AppConfig):
         action.connect(action_handler, dispatch_uid='apps.activity.models')
         from apps.activity import registry
         from apps.activity.models import Post, Activity, Comment
-        from apps.destination.models import Destination, Address, Point
-        registry.register(Post, Activity, Comment, Destination, Address, Point)
+        from apps.destination.models import Destination, Address
+        registry.register(Post, Activity, Comment, Destination, Address)

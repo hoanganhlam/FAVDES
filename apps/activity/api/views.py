@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from apps.activity import action
-from apps.destination.models import Address
+from apps.destination.models import Address, Destination
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, Count
 
@@ -46,7 +46,18 @@ class PostViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = self.perform_create(serializer)
-        action.send(sender=instance.user, verb='POSTED', action_object=instance, address=address)
+        destination_name = request.data.get("destination_name")
+        if request.data.get("destination_name"):
+            destination = Destination.objects.filter(address=address, title=destination_name).first()
+            if destination is None:
+                destination = Destination(address=address, title=destination_name, user=request.user)
+                check = address.destinations.first()
+                if check:
+                    destination.parent = check.parent
+                destination.save()
+        else:
+            destination = address.destination
+        action.send(sender=instance.user, verb='POSTED', action_object=instance, address=address, target=destination)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
@@ -73,16 +84,15 @@ class ActivityViewSet(viewsets.ModelViewSet):
         target_id = self.request.GET.get('target')
         target_content_id = self.request.GET.get('target_content')
         destination_id = self.request.GET.get('destination')
-        point_id = self.request.GET.get('point')
+        address_id = self.request.GET.get('address')
         if destination_id:
-            addresses = Address.objects.filter(points__destination__id=destination_id)
+            addresses = Address.objects.filter(destinations__id=destination_id)
             q_and = q_and & Q(
                 address__id__in=addresses.values('id')
             )
-        if point_id:
-            addresses = Address.objects.filter(points__id=point_id)
+        if address_id:
             q_and = q_and & Q(
-                address__id__in=addresses.values('id')
+                address__id=address_id
             )
         if target_id and target_content_id:
             q_temp = Q(
@@ -96,7 +106,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
                 actor_object_id=target_id
             )
             q_and = q_and & q_temp
-        if target_id is None and target_content_id is None and point_id is None and destination_id is None:
+        if target_id is None and target_content_id is None and destination_id is None:
             # Lấy những activty target đến current_user
             if user.is_authenticated:
                 q_or = q_or | Q(

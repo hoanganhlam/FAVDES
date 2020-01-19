@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'username', 'profile']
+        fields = ['id', 'first_name', 'last_name', 'username', 'profile']
 
     def get_profile(self, instance):
         if hasattr(instance, 'profile'):

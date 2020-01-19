@@ -16,7 +16,7 @@ class Address(interface.BaseModel):
     types = ArrayField(models.CharField(max_length=200), null=True, blank=True)
 
     def __str__(self):
-        return self.formatted_address
+        return str(self.id) + ' - ' + self.formatted_address
 
 
 class SearchAddress(interface.BaseModel):
@@ -37,22 +37,6 @@ class Destination(interface.BaseModel, interface.Taxonomy):
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name='destinations')
     photos = models.ManyToManyField(Media, blank=True, related_name='destinations')
     contact = JSONField(null=True, blank=True)
-
-    def __str__(self):
-        return self.title
-
-
-class Point(interface.BaseModel, interface.Taxonomy):
-    title = models.CharField(max_length=120)
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="points")
-    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name='points')
-    destination = models.ForeignKey(
-        Destination, on_delete=models.SET_NULL,
-        null=True, blank=True, related_name='points'
-    )
-    photos = models.ManyToManyField(Media, blank=True, related_name='points')
-    contact = JSONField(null=True, blank=True)
-    services = ArrayField(JSONField(null=True, blank=True), null=True, blank=True)
 
     def __str__(self):
         return self.title

@@ -65,4 +65,4 @@ def get_places_nearby(queries):
 
 
 def get_place(ids):
-    return gmaps.place(ids)
+    return gmaps.place(ids, language="en")

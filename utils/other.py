@@ -1,8 +1,5 @@
-from utils.location_types import destinations, points
 from apps.destination import models as d_models
-from utils.slug import vi_slug, _slug_strip
-from utils.location_checker import google_map_autocomplete, google_map_geo_coding, get_place
-from utils.web_checker import get_description
+from utils.location_checker import google_map_geo_coding, get_place
 
 
 def get_client_ip(request):
@@ -26,29 +23,19 @@ def convert_location(address):
     name = address.formatted_address
     if len(formatted_address_arr) > 0:
         name = formatted_address_arr[0]
-    if check_inner(address.types, points):
-        point = d_models.Point.objects.filter(address__formatted_address=address.formatted_address).first()
-        if point is None:
-            d_models.Point.objects.create(address=address, title=name)
-        else:
-            point.address = address
-            point.save()
-        result = point
+    destination = d_models.Destination.objects.filter(address__formatted_address=address.formatted_address).first()
+    if destination is None:
+        destination = d_models.Destination(address=address, title=name)
     else:
-        destination = d_models.Destination.objects.filter(address__formatted_address=address.formatted_address).first()
-        if destination is None:
-            d_models.Destination.objects.create(address=address, title=name)
-        else:
-            destination.address = address
-            destination.save()
-        result = destination
-    return result
+        destination.address = address
+    destination.save()
+    return destination
 
 
 def make_address(g_location):
     address = d_models.Address.objects.filter(place_id=g_location.get("place_id")).first()
     if address is None:
-        address = d_models.Address.objects.create(
+        address = d_models.Address(
             formatted_address=g_location.get("formatted_address") or g_location.get("vicinity"),
             geometry=g_location.get("geometry"),
             place_id=g_location.get("place_id"),
@@ -59,7 +46,7 @@ def make_address(g_location):
         address.address_components = g_location.get("address_components")
         address.formatted_address = g_location.get("formatted_address") or g_location.get("vicinity")
         address.geometry = g_location.get("geometry")
-        address.save()
+    address.save()
     destination = convert_location(address)
     return address, destination
 
@@ -73,24 +60,22 @@ def get_parent(ids):
     formatted_address = place.get("formatted_address")
     formatted_address_arr = formatted_address.split(", ")
     length = len(formatted_address_arr)
+
     for i in range(length):
         address_text_search = ', '.join(map(str, formatted_address_arr[length - i:length]))
         results = google_map_geo_coding(address_text_search)
         if results is not None and len(results) > 0:
             address, result = make_address(results[0])
-            if result is not None:
+            if parent is not None and result.id != parent.id and parent.__class__.__name__ == "Destination":
                 if result.__class__.__name__ == "Destination":
                     result.parent = parent
                     result.save()
-                elif result.__class__.__name__ == "Point":
-                    result.destination = parent
-                    result.save()
-            if result is None:
+            if result is not None:
                 parent = result
-    if parent is not None and parent.id != c_result.id:
+    if parent is not None and c_result is not None and parent.__class__.__name__ == "Destination":
+        if parent.id == c_result.id:
+            return address
         if c_result.__class__.__name__ == "Destination":
             c_result.parent = parent
-        elif c_result.__class__.__name__ == "Point":
-            c_result.destination = parent
         c_result.save()
     return address

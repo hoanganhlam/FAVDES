@@ -2,7 +2,7 @@ from apps.activity import models
 from rest_framework import serializers
 from apps.media.api.serializers import MediaSerializer
 from apps.authentication.api.serializers import UserSerializer
-from apps.destination.api.serializers import DAddressSerializer, DestinationSerializer, PointSerializer
+from apps.destination.api.serializers import DAddressSerializer, DestinationSerializer
 
 
 class TaxonomySerializer(serializers.ModelSerializer):
@@ -44,8 +44,10 @@ class ActivitySerializer(serializers.ModelSerializer):
         return super(ActivitySerializer, self).to_representation(instance)
 
     def get_is_voted(self, instance):
-        user = self.context['request'].user
-        return user in instance.voters.all()
+        if self.context.get("request"):
+            user = self.context.get("request").user
+            return user in instance.voters.all()
+        return False
 
     def get_total_vote(self, instance):
         return instance.voters.count()
@@ -55,10 +57,6 @@ class ActivitySerializer(serializers.ModelSerializer):
         flag = 'stay'
         if instance.address:
             d = instance.address.destinations.first()
-            if d is None:
-                p = instance.address.points.first()
-                if p:
-                    d = p.destination
             if d:
                 d_str = d.slug
         return '/' + d_str + '/' + flag + '/' + str(instance.id)
@@ -94,21 +92,15 @@ def convert_serializer(instance):
             out = UserSerializer(instance).data
         elif instance.__class__.__name__ == "Destination":
             out = DestinationSerializer(instance).data
-        elif instance.__class__.__name__ == "Point":
-            out = PointSerializer(instance).data
         elif instance.__class__.__name__ == "Post":
             out = PostSerializer(instance).data
         elif instance.__class__.__name__ == "Comment":
             out = CommentSerializer(instance).data
         elif instance.__class__.__name__ == "Address":
             destination = instance.destinations.first()
-            point = instance.points.first()
             if destination:
                 out = DestinationSerializer(destination).data
                 out["model_name"] = destination.__class__.__name__
-            elif point:
-                out = PointSerializer(destination).data
-                out["model_name"] = point.__class__.__name__
             return out
         if out:
             out["model_name"] = instance.__class__.__name__

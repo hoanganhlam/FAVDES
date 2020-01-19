@@ -21,21 +21,10 @@ class DestinationViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
 
 
-class PointViewSet(viewsets.ModelViewSet):
-    models = models.Point
-    queryset = models.objects.order_by('-id')
-    serializer_class = serializers.PointSerializer
-    permission_classes = permissions.AllowAny,
-    pagination_class = pagination.Pagination
-    filter_backends = [OrderingFilter, SearchFilter]
-    search_fields = ['title', 'description']
-    lookup_field = 'slug'
-
-
 class AddressViewSet(viewsets.ModelViewSet):
     models = models.Address
     queryset = models.objects.order_by('-id')
-    serializer_class = serializers.AddressSerializer
+    serializer_class = serializers.DAddressSerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
     filter_backends = [OrderingFilter, SearchFilter]

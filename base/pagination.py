@@ -8,22 +8,21 @@ from rest_framework.response import Response
 
 
 class Pagination(pagination.PageNumberPagination):
-    page_size = 10
     page_size_query_param = 'page_size'
-    content_type = 0
 
     def __init__(self):
         pass
 
     def paginate_queryset(self, queryset, request, view=None):
-        dctUrlParams = request.query_params
-        if 'flt' in dctUrlParams:
+        url_params = request.query_params
+        if 'flt' in url_params:
             try:
-                dctFilterAttrs = json.loads(dctUrlParams.get('flt') or '')
-                if 'perpage' in dctFilterAttrs:
-                    self.page_size = int(dctFilterAttrs.get('perpage'))
+                filter_arr = json.loads(url_params.get('flt') or '')
+                if 'page_size' in filter_arr:
+                    self.page_size = int(filter_arr.get('page_size'))
             except Exception as ex:
-                dctFilterAttrs = None
+                print(ex)
+                filter_arr = None
 
         return super(Pagination, self).paginate_queryset(queryset=queryset, request=request, view=view)
 
@@ -34,7 +33,6 @@ class Pagination(pagination.PageNumberPagination):
                 'previous': self.get_previous_link()
             },
             'count': self.page.paginator.count,
-            'page_size': self.page_size,
             'num_pages': self.page.paginator.num_pages,
             'results': data
         })
