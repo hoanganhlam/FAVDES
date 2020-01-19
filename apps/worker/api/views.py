@@ -85,8 +85,12 @@ def fetch_address(request):
             else:
                 search_address.count = search_address.count + 1
                 search_address.save()
-        return Response(AddressSerializer(addresses, many=True).data)
-    return Response([])
+        return Response({
+            "results": AddressSerializer(addresses, many=True).data
+        })
+    return Response({
+        "results": []
+    })
 
 
 @api_view(['GET'])
