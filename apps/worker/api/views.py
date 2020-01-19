@@ -64,7 +64,7 @@ def fetch_address(request):
     search = request.GET.get("search")
     addresses = []
     if search:
-        search_address = d_models.SearchAddress.objects.filter(search_keyword=search).first()
+        search_address = d_models.SearchAddress.objects.filter(search_keyword=search, address__isnull=False).first()
         # Make Address
         if search_address is None:
             results = get_address(search)

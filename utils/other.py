@@ -63,7 +63,6 @@ def get_parent(ids):
     formatted_address = place.get("formatted_address")
     formatted_address_arr = formatted_address.split(", ")
     length = len(formatted_address_arr)
-
     for i in range(length):
         address_text_search = ', '.join(map(str, formatted_address_arr[length - i:length]))
         results = google_map_geo_coding(address_text_search)
@@ -81,4 +80,4 @@ def get_parent(ids):
         if c_result.__class__.__name__ == "Destination":
             c_result.parent = parent
         c_result.save()
-    return address
+    return current_address
