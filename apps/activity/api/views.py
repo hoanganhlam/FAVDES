@@ -56,7 +56,7 @@ class PostViewSet(viewsets.ModelViewSet):
                     destination.parent = check.parent
                 destination.save()
         else:
-            destination = address.destination
+            destination = address.destinations.first()
         action.send(sender=instance.user, verb='POSTED', action_object=instance, address=address, target=destination)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
