@@ -1,6 +1,18 @@
 version: "3"
 
 services:
+  app:
+    container_name: favdes_app
+    restart: always
+    build: ./FAVDES_FRONT
+    expose:
+      - "3000"
+    networks:
+      - app-network
+
+    command:
+      "npm run start"
+
   backend:
     restart: always
     build: ./FAVDES
@@ -14,15 +26,15 @@ services:
     networks:
       - app-network
 
-  nginx:
-    restart: always
-    image: nginx:latest
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./data/nginx.conf:/etc/nginx/nginx.conf
-    networks:
-      - app-network
+#  nginx:
+#    restart: always
+#    image: nginx:latest
+#    ports:
+#      - "8000:8000"
+#    volumes:
+#      - ./data/nginx.conf:/etc/nginx/nginx.conf
+#    networks:
+#      - app-network
 
   postgres:
     restart: always
