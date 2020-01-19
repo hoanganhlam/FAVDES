@@ -49,7 +49,7 @@ def fetch_url(request):
 
 @api_view(['GET'])
 def fetch_places(request):
-    data = get_address(request.GET)
+    data = get_address(request.GET.get("search"))
     return Response(data)
 
 
@@ -62,37 +62,31 @@ def fetch_place_photos(request):
 @api_view(['GET'])
 def fetch_address(request):
     search = request.GET.get("search")
+    addresses = []
     if search:
         search_address = d_models.SearchAddress.objects.filter(search_keyword=search).first()
-
         # Make Address
         if search_address is None:
-            results = google_map_geo_coding(search)
-            if len(results) == 0:
-                return None
-            address = make_address(results[0])
-            if address is None:
-                return Response({})
+            results = get_address(search)
+            for result in results:
+                address = get_parent(result.get("place_id"))
+                addresses.append(address)
         else:
-            address = search_address.address
-
-        # Handle Search Address
-        ip = get_client_ip(request)
-        search_address = d_models.SearchAddress.objects.filter(search_keyword=search, tracking_ip=ip).first()
-        if search_address is None:
-            d_models.SearchAddress.objects.create(
-                address=address,
-                search_keyword=search,
-                tracking_ip=get_client_ip(request)
-            )
-        else:
-            search_address.count = search_address.count + 1
-            search_address.save()
-
-        convert_location(address)
-
-        return Response(AddressSerializer(address).data)
-    return Response({})
+            addresses.append(search_address.address)
+            # Handle Search Address
+            ip = get_client_ip(request)
+            search_address = d_models.SearchAddress.objects.filter(search_keyword=search, tracking_ip=ip).first()
+            if search_address is None:
+                d_models.SearchAddress.objects.create(
+                    address=search_address.address,
+                    search_keyword=search,
+                    tracking_ip=get_client_ip(request)
+                )
+            else:
+                search_address.count = search_address.count + 1
+                search_address.save()
+        return Response(AddressSerializer(addresses, many=True).data)
+    return Response([])
 
 
 @api_view(['GET'])

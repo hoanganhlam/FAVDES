@@ -44,8 +44,7 @@ def check_inner(array, array2):
     return False
 
 
-def get_address(queries):
-    search = queries.get('search')
+def get_address(search):
     response = gmaps.places(query=search)
     return response
 
