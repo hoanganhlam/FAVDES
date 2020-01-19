@@ -1,11 +1,14 @@
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 from apps.activity import action, actions
-from apps.activity.models import Activity
+from apps.activity.models import Activity, Post
+from apps.destination.models import Destination, Address
 from base.db.redis import rediscontroller
 from apps.activity.api.serializers import ActivitySerializer, convert_serializer
 import json
 from apps.activity import verbs
+from django.db.models import Q
+from django.contrib.contenttypes.models import ContentType
 
 redis = rediscontroller.RedisController()
 redis.start()
@@ -14,13 +17,6 @@ redis.start()
 @receiver(post_save, sender=Activity)
 def activity_create(sender, instance, created, **kwargs):
     if created:
-        if instance.temp is None:
-            instance.temp = {
-                "actor": convert_serializer(instance.actor),
-                "action_object": convert_serializer(instance.action_object),
-                "target": convert_serializer(instance.target)
-            }
-            instance.save()
         if instance.actor.__class__.__name__ == 'User' and instance.verb != verbs.FOLLOWED:
             if not actions.is_following(instance.actor, obj=instance):
                 actions.follow(user=instance.actor, obj=instance)
@@ -40,3 +36,38 @@ def activity_create(sender, instance, created, **kwargs):
             redis.notify(json.dumps(payload))
         except Exception as e:
             print(e)
+    if instance.temp is None:
+        instance.temp = {
+            "actor": convert_serializer(instance.actor),
+            "action_object": convert_serializer(instance.action_object),
+            "target": convert_serializer(instance.target)
+        }
+        instance.save()
+
+
+@receiver(post_save, sender=Post)
+def post_create(sender, instance, created, **kwargs):
+    if not created:
+        handle_update(instance)
+
+
+def handle_update(instance):
+    ct = ContentType.objects.get_for_model(instance)
+    q = Q(
+        target_content_type=ct,
+        target_object_id=instance.id
+    ) | Q(
+        action_object_content_type=ct,
+        action_object_object_id=instance.id,
+    ) | Q(
+        actor_content_type=ct,
+        actor_object_id=instance.id
+    )
+    activities = Activity.objects.filter(q)
+    for activity in activities:
+        activity.temp = {
+            "actor": convert_serializer(activity.actor),
+            "action_object": convert_serializer(activity.action_object),
+            "target": convert_serializer(activity.target)
+        }
+        activity.save()
