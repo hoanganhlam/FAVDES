@@ -68,8 +68,8 @@ def fetch_address(request):
         # Make Address
         if search_address is None:
             results = get_address(search)
-            for result in results:
-                address = get_parent(result.get("place_id"))
+            for result in results.get("results"):
+                address = get_parent(result)
                 addresses.append(address)
         else:
             addresses.append(search_address.address)

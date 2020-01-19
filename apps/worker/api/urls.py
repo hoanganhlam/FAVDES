@@ -15,7 +15,7 @@ urlpatterns = [
     url(r'fetch-address-autocomplete', views.fetch_address_autocomplete),
     url(r'fetch-address', views.fetch_address),
     url(r'fetch-description', views.fetch_description),
-    url(r'fetch-places-near', views.fetch_places_places_nearby),
+    url(r'fetch-placcaies-near', views.fetch_places_places_nearby),
     url(r'fetch-places', views.fetch_places),
     url(r'fetch-i-photos', views.fetch_instagram_photos),
     url(r'fetch-g-photos', views.fetch_google_photos),

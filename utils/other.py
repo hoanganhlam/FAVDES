@@ -52,8 +52,11 @@ def make_address(g_location):
 
 
 def get_parent(ids):
-    worker = get_place(ids)
-    place = worker.get("result")
+    if type(ids) == dict:
+        place = ids
+    else:
+        worker = get_place(ids)
+        place = worker.get("result")
     current_address, c_result = make_address(place)
     parent = None
     address = None
