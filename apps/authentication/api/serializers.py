@@ -8,7 +8,7 @@ from apps.media.api.serializers import MediaSerializer
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ['media', 'description']
+        fields = ['media', 'description', 'nick']
 
     def to_representation(self, instance):
         self.fields['media'] = MediaSerializer(read_only=True)

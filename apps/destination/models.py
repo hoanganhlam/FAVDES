@@ -11,7 +11,7 @@ from apps.media.models import Media
 class Address(interface.BaseModel):
     address_components = ArrayField(JSONField(blank=True, null=True), blank=True, null=True)
     geometry = JSONField(blank=True, null=True)
-    formatted_address = models.CharField(max_length=120, blank=True, null=True)
+    formatted_address = models.CharField(max_length=220, blank=True, null=True)
     place_id = models.CharField(max_length=200, null=True, blank=True, unique=True)
     types = ArrayField(models.CharField(max_length=200), null=True, blank=True)
 

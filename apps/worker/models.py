@@ -28,3 +28,14 @@ class IGPost(BaseModel):
     address = models.ForeignKey(Address, null=True, blank=True, on_delete=models.SET_NULL)
     coordinate = JSONField(blank=True, null=True)
     photo_types = ArrayField(models.CharField(max_length=100, null=True, blank=True), null=True, blank=True)
+
+
+class PXUser(BaseModel):
+    full_name = models.CharField(max_length=160, blank=True, null=True)
+    username = models.CharField(max_length=160)
+
+
+class PXPost(BaseModel):
+    path = models.CharField(max_length=260, blank=True, null=True)
+    location_text = models.CharField(max_length=260, blank=True, null=True)
+    user = models.ForeignKey(PXUser, on_delete=models.SET_NULL, null=True, blank=True)

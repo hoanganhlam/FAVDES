@@ -24,6 +24,7 @@ class Post(interface.BaseModel):
     content = models.TextField(max_length=1000, null=True, blank=True)
     medias = models.ManyToManyField(Media, blank=True, related_name='posts')
     taxonomies = models.ManyToManyField(Taxonomy, blank=True, related_name='posts')
+    source = JSONField(null=True, blank=True)
 
 
 @python_2_unicode_compatible

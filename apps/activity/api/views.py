@@ -10,6 +10,10 @@ from apps.activity import action
 from apps.destination.models import Address, Destination
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, Count
+from django.contrib.auth.models import User
+from apps.authentication.models import Profile
+from apps.media.models import Media
+from utils.other import get_addresses
 
 
 # from datetime import datetime
@@ -41,7 +45,6 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         address_id = request.data.get("address")
-        tagged = request.data.get("tagged")
         address = Address.objects.get(pk=int(address_id))
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -108,7 +111,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
             q_and = q_and & q_temp
         if target_id is None and target_content_id is None and destination_id is None:
             # Lấy những activty target đến current_user
-            if user.is_authenticated:
+            if user.is_authenticated and not user.is_staff:
                 q_or = q_or | Q(
                     target_content_type=ContentType.objects.get_for_model(user),
                     target_object_id=user.pk
@@ -168,6 +171,33 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 @api_view(['POST'])
+def import_data(request):
+    if not request.user.is_authenticated:
+        return Response({})
+    instance = models.Post.objects.filter(source__pexels=request.data.get("id")).first()
+    if instance is None:
+        media = Media.objects.save_url(url=request.data.get("download"))
+        if media:
+            username = request.data.get("user_username")
+            fullname = request.data.get("user_full_name")
+            user = User.objects.filter(username=username).first()
+            if user is None:
+                user = User.objects.create_user(username=username, password="DKM@VKL1234$#@!")
+                Profile.objects.create(user=user, nick=fullname)
+            source = {"pexels": request.data.get("id")}
+            instance = models.Post(user=user, source=source, content=request.data.get("title"))
+            instance.save()
+            instance.medias.add(media)
+            address = None
+            if request.data.get("location"):
+                addresses = get_addresses(search=request.data.get("location"))
+                if len(addresses) > 0:
+                    address = addresses[0]
+            action.send(sender=instance.user, verb='POSTED', action_object=instance, address=address)
+    return Response({})
+
+
+@api_view(['POST'])
 def vote_post(request, pk):
     user = request.user
     if not request.user.is_authenticated:
@@ -223,7 +253,6 @@ def get_config(request):
     return Response(
         {
             "content_type": {
-                "point": ContentType.objects.get(model="point").pk,
                 "destination": ContentType.objects.get(model="destination").pk,
                 "user": ContentType.objects.get(model="user").pk,
                 "post": ContentType.objects.get(model="post", app_label="activity").pk,

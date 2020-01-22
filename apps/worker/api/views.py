@@ -2,16 +2,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from apps.destination import models as d_models
 from apps.destination.api.serializers import AddressSerializer
-from utils.location_checker import google_map_geo_coding, get_address, get_place_photos, get_places_nearby, \
-    google_map_autocomplete, get_place, reverse_geocode_geo_coding
+from utils.location_checker import get_address, get_place_photos, get_places_nearby, reverse_geocode_geo_coding
 from utils.other import get_client_ip, convert_location, make_address, get_parent
-from utils.web_checker import get_web_meta, get_description, get_destinations
-from instagram_private_api import Client
+from utils.web_checker import get_web_meta, get_description
 from utils.instagram import get_instagram_by_tag, get_instagram_users
-from apps.media.models import Media
-from django.core.files.temp import NamedTemporaryFile
-from urllib.request import urlopen, urlparse
-from django.core.files import File
 from rest_framework import viewsets, permissions
 from rest_framework.filters import OrderingFilter
 from base import pagination
@@ -94,19 +88,6 @@ def fetch_address(request):
 
 
 @api_view(['GET'])
-def fetch_address_autocomplete(request):
-    search = request.GET.get("search")
-    results = google_map_autocomplete(search)
-    output = []
-    for result in results:
-        address = get_parent(result.get("place_id"))
-        output.append(address)
-    return Response({
-        "results": AddressSerializer(output, many=True).data
-    })
-
-
-@api_view(['GET'])
 def fetch_description(request):
     search = request.GET.get("search")
     lang = request.GET.get("lang") or "vi"
@@ -131,25 +112,6 @@ def fetch_places_places_nearby(request):
             address = make_address(i)
             convert_location(address)
     return Response(data)
-
-
-@api_view(['GET'])
-def fetch_instagram(request):
-    user_name = 'hoanglamyeah'
-    password = 'Hoanganhlam@no1'
-
-    api = Client(user_name, password)
-    # results = api.location_search(latitude=21.0277644, longitude=105.8341598)
-    # results = api.location_fb_search(query="Ha Noi", rank_token="08276948-21a8-11ea-8c58-acde48001122")
-    # return Response(results)
-    results = api.feed_tag(tag="hanoi", rank_token="08276948-21a8-11ea-8c58-acde48001122")
-    return Response(results)
-
-
-@api_view(['GET'])
-def fetch_destination(request):
-    data = get_destinations()
-    return Response({})
 
 
 @api_view(['GET'])

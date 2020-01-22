@@ -18,7 +18,6 @@ def get_instagram_by_tag(search, max_id=None):
     else:
         results = api.feed_tag(keyword, rank_token="08276948-21a8-11ea-8c58-acde48001122")
     next_max_id = results.get('next_max_id')
-    print(next_max_id)
     for item in results.get("items"):
         extract_instagram(item)
     if results.get("ranked_items"):

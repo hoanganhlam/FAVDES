@@ -78,3 +78,18 @@ def get_parent(ids):
             c_result.parent = parent
             c_result.save()
     return current_address
+
+
+def get_addresses(search):
+    addresses = []
+    if search:
+        search_address = d_models.SearchAddress.objects.filter(search_keyword=search, address__isnull=False).first()
+        # Make Address
+        if search_address is None:
+            results = get_address(search)
+            for result in results.get("results"):
+                address = get_parent(result)
+                addresses.append(address)
+        else:
+            addresses.append(search_address.address)
+    return addresses
