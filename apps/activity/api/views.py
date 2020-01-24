@@ -235,17 +235,20 @@ def vote_comment(request, pk):
 
 @api_view(['POST'])
 def follow(request):
-    content_type_id = request.POST.get("content_type_id")
-    object_id = request.POST.get("object_id")
+    content_type_id = request.data.get("content_type_id")
+    object_id = request.data.get("object_id")
     user = request.user
     if not request.user.is_authenticated:
-        return Response(None)
+        return Response(False)
     else:
         instance = models.Follow.objects.filter(user=user, content_type_id=content_type_id, object_id=object_id).first()
         if instance is None:
             instance = models.Follow(user=user, content_type_id=content_type_id, object_id=object_id)
-            instance = instance.save()
-        return Response(instance.id)
+            instance.save()
+            return Response(True)
+        else:
+            instance.delete()
+            return Response(False)
 
 
 @api_view(['GET'])
@@ -261,3 +264,15 @@ def get_config(request):
             }
         }
     )
+
+
+def make_temp(request):
+    items = models.Activity.objects.all()
+    for item in items:
+        item.temp = {
+            "actor": serializers.convert_serializer(item.actor),
+            "action_object": serializers.convert_serializer(item.action_object),
+            "target": serializers.convert_serializer(item.target)
+        }
+        item.save()
+    return Response(True)

@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from apps.authentication.models import Profile
 from rest_auth.registration.serializers import RegisterSerializer
 from apps.media.api.serializers import MediaSerializer
+from apps.activity.actions import is_following
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -17,15 +18,23 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'username', 'profile']
+        fields = ['id', 'first_name', 'last_name', 'username', 'profile', 'is_following', 'is_staff']
 
     def get_profile(self, instance):
         if hasattr(instance, 'profile'):
             return ProfileSerializer(instance.profile).data
         return None
+
+    def get_is_following(self, instance):
+        if self.context.get("request"):
+            user = self.context.get("request").user
+            if user.is_authenticated:
+                return is_following(user, instance)
+        return False
 
 
 class NameRegistrationSerializer(RegisterSerializer):

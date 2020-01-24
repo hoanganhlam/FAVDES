@@ -9,6 +9,7 @@ class ActivityConfig(AppConfig):
         from apps.activity.actions import action_handler
         action.connect(action_handler, dispatch_uid='apps.activity.models')
         from apps.activity import registry
+        from django.contrib.auth.models import User
         from apps.activity.models import Post, Activity, Comment
         from apps.destination.models import Destination, Address
-        registry.register(Post, Activity, Comment, Destination, Address)
+        registry.register(Post, Activity, Comment, Destination, Address, User)

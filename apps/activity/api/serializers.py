@@ -69,6 +69,9 @@ class CommentSerializer(serializers.ModelSerializer):
         model = models.Comment
         fields = '__all__'
         extra_fields = ['is_voted']
+        extra_kwargs = {
+            'user': {'read_only': True}
+        }
 
     def get_field_names(self, declared_fields, info):
         expanded_fields = super(CommentSerializer, self).get_field_names(declared_fields, info)

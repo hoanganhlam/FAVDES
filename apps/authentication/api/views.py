@@ -20,7 +20,7 @@ jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
 
 class UserViewSet(viewsets.ModelViewSet):
     models = User
-    queryset = models.objects.all().order_by('id')
+    queryset = models.objects.order_by('-id')
     serializer_class = UserSerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination

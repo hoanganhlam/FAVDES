@@ -1,5 +1,5 @@
 from django.db import models
-from base.interface import BaseModel
+from base.interface import BaseModel, Taxonomy
 import os
 import datetime
 from uuid import uuid4
@@ -42,14 +42,12 @@ class MediaManager(models.Manager):
         name = urlparse(url).path.split('/')[-1]
         temp = NamedTemporaryFile(delete=True)
         req = requests.get(url=url, headers={'User-Agent': 'Mozilla/5.0'}, allow_redirects=True)
-        print(req.headers.keys())
         disposition = req.headers.get("Content-Disposition")
         if disposition:
             test = disposition.split("=")
             if len(test) > 1:
                 name = test[1].replace("\"", "")
         temp.write(req.content)
-        print(name)
         ext = name.split('.')[-1]
         if ext == '':
             ext = 'jpg'
@@ -62,12 +60,16 @@ class MediaManager(models.Manager):
         return None
 
 
+class MediaTaxonomy(BaseModel, Taxonomy):
+    pass
+
+
 class Media(BaseModel):
     title = models.CharField(max_length=120, blank=True)
     description = models.CharField(max_length=200, blank=True)
     path = ImageField(upload_to=path_and_rename, max_length=500, validators=[validate_file_size])
     user = models.ForeignKey(User, related_name='medias', on_delete=models.SET_NULL, blank=True, null=True)
-
+    taxonomies = models.ManyToManyField(MediaTaxonomy, related_name='medias', blank=True)
     objects = MediaManager()
 
 
