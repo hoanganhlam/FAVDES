@@ -266,18 +266,6 @@ def get_config(request):
     )
 
 
-def make_temp(request):
-    items = models.Activity.objects.all()
-    for item in items:
-        item.temp = {
-            "actor": serializers.convert_serializer(item.actor),
-            "action_object": serializers.convert_serializer(item.action_object),
-            "target": serializers.convert_serializer(item.target)
-        }
-        item.save()
-    return Response(True)
-
-
 @api_view(['GET'])
 def is_following(request):
     if request.user.is_authenticated:
@@ -291,3 +279,15 @@ def is_following(request):
         if instance:
             return Response(True)
     return Response(False)
+
+
+def make_temp(request):
+    items = models.Activity.objects.all()
+    for item in items:
+        item.temp = {
+            "actor": serializers.convert_serializer(item.actor),
+            "action_object": serializers.convert_serializer(item.action_object),
+            "target": serializers.convert_serializer(item.target)
+        }
+        item.save()
+    return Response(True)
