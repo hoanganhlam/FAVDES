@@ -162,8 +162,8 @@ class CommentViewSet(viewsets.ModelViewSet):
     lookup_field = 'pk'
 
     def list(self, request, *args, **kwargs):
-        post_id = int(request.GET.get("post"))
-        self.queryset = self.queryset.filter(activity__id=post_id)
+        activity = int(request.GET.get("activity"))
+        self.queryset = self.queryset.filter(activity__id=activity)
         return super(CommentViewSet, self).list(request, *args, **kwargs)
 
     def perform_create(self, serializer):

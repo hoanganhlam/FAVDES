@@ -58,5 +58,10 @@ class MediaCommentViewSet(viewsets.ModelViewSet):
     search_fields = ['content']
     lookup_field = 'pk'
 
+    def list(self, request, *args, **kwargs):
+        media = int(request.GET.get("media"))
+        self.queryset = self.queryset.filter(media__id=media)
+        return super(MediaCommentViewSet, self).list(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)
