@@ -14,6 +14,7 @@ urlpatterns = [
     url(r'^comments/(?P<pk>[0-9]+)/vote$', views.vote_comment),
     url('config', views.get_config),
     url('follow', views.follow),
+    url('is-following', views.is_following),
     url('import', views.import_data),
     url('regenerate', views.make_temp)
 ]

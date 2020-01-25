@@ -70,6 +70,8 @@ class Media(BaseModel):
     path = ImageField(upload_to=path_and_rename, max_length=500, validators=[validate_file_size])
     user = models.ForeignKey(User, related_name='medias', on_delete=models.SET_NULL, blank=True, null=True)
     taxonomies = models.ManyToManyField(MediaTaxonomy, related_name='medias', blank=True)
+    voters = models.ManyToManyField(User, blank=True, related_name='voted_medias')
+
     objects = MediaManager()
 
 

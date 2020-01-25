@@ -4,6 +4,7 @@ from base import pagination
 from . import serializers
 from apps.media import models
 from rest_framework.response import Response
+from rest_framework.decorators import api_view
 
 
 # from datetime import datetime
@@ -65,3 +66,23 @@ class MediaCommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         return serializer.save(user=self.request.user)
+
+
+@api_view(['GET'])
+def is_voted(request, pk):
+    if request.user.is_authenticated:
+        media = models.Media.objects.get(pk=pk)
+        return Response(request.user in media.voters.all())
+    return Response(False)
+
+
+@api_view(['POST'])
+def vote(request, pk):
+    if request.user.is_authenticated:
+        media = models.Media.objects.get(pk=pk)
+        if request.user in media.voters.all():
+            media.voters.remove(request.user)
+        else:
+            media.voters.add(request.user)
+            return Response(True)
+    return Response(False)
