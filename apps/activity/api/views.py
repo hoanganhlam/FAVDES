@@ -281,8 +281,8 @@ def make_temp(request):
 @api_view(['GET'])
 def is_following(request):
     if request.user.is_authenticated:
-        content_type_id = request.GET.get("content-type-id")
-        object_id = request.GET.get("object-id")
+        content_type_id = request.GET.get("contentType")
+        object_id = request.GET.get("objectId")
         instance = models.Follow.objects.filter(
             user=request.user,
             content_type_id=content_type_id,
