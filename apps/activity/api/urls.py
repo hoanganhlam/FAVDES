@@ -9,6 +9,7 @@ router.register(r'comments', views.CommentViewSet)
 router.register(r'posts', views.PostViewSet)
 
 urlpatterns = [
+url(r'^', include(router.urls)),
     url(r'^is-following', views.is_following),
     url(r'^activities/(?P<pk>[0-9]+)/vote$', views.vote_post),
     url(r'^comments/(?P<pk>[0-9]+)/vote$', views.vote_comment),
@@ -16,5 +17,4 @@ urlpatterns = [
     url(r'^follow', views.follow),
     url(r'^import', views.import_data),
     url(r'^regenerate', views.make_temp),
-    url(r'^', include(router.urls)),
 ]

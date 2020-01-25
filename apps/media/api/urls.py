@@ -8,7 +8,7 @@ router.register(r'media-comments', views.MediaCommentViewSet)
 router.register(r'media-taxonomies', views.MediaTaxonomyViewSet)
 
 urlpatterns = [
+    url(r'^', include(router.urls)),
     url(r'^medias/(?P<pk>[0-9]+)/is-voted$', views.is_voted),
     url(r'^medias/(?P<pk>[0-9]+)/vote$', views.vote),
-    url(r'^', include(router.urls)),
 ]
