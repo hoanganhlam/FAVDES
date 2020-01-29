@@ -2,7 +2,7 @@ from django.db import models
 from base import interface
 from django.contrib.auth.models import User
 from apps.media.models import Media
-from apps.destination.models import Address
+from apps.destination.models import Address, DAR
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -15,7 +15,7 @@ now = timezone.now
 
 
 class Taxonomy(interface.Taxonomy, interface.BaseModel):
-    pass
+    flag = models.CharField(max_length=50, default="NORMAL")
 
 
 class Post(interface.BaseModel):
@@ -76,6 +76,22 @@ class Activity(interface.BaseModel):
         if self.action_object:
             return _('%(actor)s %(verb)s %(action_object)s %(created)s ago') % ctx
         return _('%(actor)s %(verb)s %(created)s ago') % ctx
+
+    def make_dar(self):
+        if self.address:
+            for destination in self.address.destinations.filter(flags__contains=["SPECIAL"]):
+                test = DAR.objects.filter(time=self.created, destination=destination).first()
+                if test is None:
+                    children = destination.get_all_children()
+                    address_ids = list(map(lambda x: x.address.pk, children))
+                    count = Activity.objects.filter(address__id__in=address_ids, created__day=self.created.day,
+                                                    created__month=self.created.month,
+                                                    created__year=self.created.year).count()
+                    test = DAR(time=self.created, destination=destination, count=count)
+                else:
+                    test.count = test.count + 1
+                print(test.count)
+                test.save()
 
 
 class Comment(interface.BaseModel):

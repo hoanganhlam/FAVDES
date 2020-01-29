@@ -3,6 +3,7 @@ from base import interface
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.contrib.auth.models import User
 from apps.media.models import Media
+from django.db.models import Q, Sum
 
 
 # Create your models here.
@@ -37,6 +38,26 @@ class Destination(interface.BaseModel, interface.Taxonomy):
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name='destinations')
     photos = models.ManyToManyField(Media, blank=True, related_name='destinations')
     contact = JSONField(null=True, blank=True)
+    flags = ArrayField(models.CharField(max_length=50, null=True, blank=True), null=True, blank=True)
 
     def __str__(self):
-        return self.title
+        return str(self.id) + ": " + self.title
+
+    def get_all_children(self):
+        children = [self]
+        try:
+            child_list = self.children.all()
+        except AttributeError:
+            return children
+        for child in child_list:
+            children.extend(child.get_all_children())
+        return children
+
+
+class DAR(interface.BaseModel):
+    destination = models.ForeignKey(Destination, related_name='dars', on_delete=models.CASCADE)
+    count = models.IntegerField(default=0)
+    time = models.DateField()
+
+    def __str__(self):
+        return str(self.time) + ": " + self.destination.title

@@ -19,25 +19,23 @@ class PostSerializer(serializers.ModelSerializer):
         model = models.Post
         fields = '__all__'
         extra_kwargs = {
-            'slug': {'read_only': True}
+            'slug': {'read_only': True},
+            'user': {'read_only': True},
         }
 
     def to_representation(self, instance):
         self.fields['medias'] = MediaSerializer(many=True, read_only=True)
-        self.fields['taxonomies'] = TaxonomySerializer(many=True, read_only=True)
-        self.fields['user'] = UserSerializer(read_only=True)
-
         return super(PostSerializer, self).to_representation(instance)
 
 
 class ActivitySerializer(serializers.ModelSerializer):
     is_voted = serializers.SerializerMethodField()
     total_vote = serializers.SerializerMethodField()
-    slug = serializers.SerializerMethodField()
+    taxonomies = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Activity
-        fields = ['id', 'verb', 'created', 'is_voted', 'total_vote', 'slug', 'address', 'temp']
+        fields = ['id', 'verb', 'created', 'is_voted', 'total_vote', 'address', 'temp', 'taxonomies']
 
     def to_representation(self, instance):
         self.fields['address'] = DAddressSerializer(read_only=True)
@@ -52,14 +50,10 @@ class ActivitySerializer(serializers.ModelSerializer):
     def get_total_vote(self, instance):
         return instance.voters.count()
 
-    def get_slug(self, instance):
-        d_str = 'anywhere'
-        flag = 'stay'
-        if instance.address:
-            d = instance.address.destinations.first()
-            if d:
-                d_str = d.slug
-        return '/' + d_str + '/' + flag + '/' + str(instance.id)
+    def get_taxonomies(self, instance):
+        if instance.action_object.__class__.__name__ == "Post":
+            return TaxonomySerializer(instance.action_object.taxonomies.all(), many=True).data
+        return []
 
 
 class CommentSerializer(serializers.ModelSerializer):

@@ -88,8 +88,15 @@ class ActivityViewSet(viewsets.ModelViewSet):
         target_content_id = self.request.GET.get('target_content')
         destination_id = self.request.GET.get('destination')
         address_id = self.request.GET.get('address')
+        hashtag = self.request.GET.get('hashtag')
+        if hashtag:
+            posts = models.Post.objects.filter(taxonomies__slug=hashtag)
+            q_and = q_and & Q(action_object_content_type__model="post") & Q(
+                action_object_object_id__in=list(map(lambda x: str(x.get("id")), posts.values('id'))))
         if destination_id:
-            addresses = Address.objects.filter(destinations__id=destination_id)
+            destination = Destination.objects.get(pk=destination_id)
+            destinations = destination.get_all_children()
+            addresses = Address.objects.filter(destinations__id__in=(element.pk for element in destinations))
             q_and = q_and & Q(
                 address__id__in=addresses.values('id')
             )

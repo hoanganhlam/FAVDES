@@ -1,13 +1,12 @@
 from apps.destination import models
 from rest_framework import serializers
 from apps.media.api.serializers import MediaSerializer
-from apps.authentication.api.serializers import UserSerializer
 
 
 class DestinationSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Destination
-        fields = '__all__'
+        fields = ['id', 'title', 'slug', 'description', 'user', 'address', 'photos', 'contact']
         extra_kwargs = {
             'slug': {'read_only': True}
         }
@@ -47,3 +46,13 @@ class DAddressSerializer(serializers.ModelSerializer):
             return expanded_fields + self.Meta.extra_fields
         else:
             return expanded_fields
+
+
+class DARSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = models.DAR
+        fields = '__all__'
+
+    def to_representation(self, instance):
+        self.fields['destination'] = DestinationSerializer(read_only=True)
+        return super(DARSerializer, self).to_representation(instance)

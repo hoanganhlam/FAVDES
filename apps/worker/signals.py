@@ -36,6 +36,7 @@ def activity_create(sender, instance, created, **kwargs):
             redis.notify(json.dumps(payload))
         except Exception as e:
             print(e)
+        instance.make_dar()
     if instance.temp is None:
         instance.temp = {
             "actor": convert_serializer(instance.actor),
