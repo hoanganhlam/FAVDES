@@ -29,26 +29,14 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class ActivitySerializer(serializers.ModelSerializer):
-    is_voted = serializers.SerializerMethodField()
-    total_vote = serializers.SerializerMethodField()
-    taxonomies = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Activity
-        fields = ['id', 'verb', 'created', 'is_voted', 'total_vote', 'address', 'temp', 'taxonomies']
+        fields = ['id', 'verb', 'created', 'address', 'temp']
 
     def to_representation(self, instance):
         self.fields['address'] = DAddressSerializer(read_only=True)
         return super(ActivitySerializer, self).to_representation(instance)
-
-    def get_is_voted(self, instance):
-        if self.context.get("request"):
-            user = self.context.get("request").user
-            return user in instance.voters.all()
-        return False
-
-    def get_total_vote(self, instance):
-        return instance.voters.count()
 
     def get_taxonomies(self, instance):
         if instance.action_object.__class__.__name__ == "Post":

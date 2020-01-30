@@ -288,6 +288,23 @@ def is_following(request):
     return Response(False)
 
 
+@api_view(['GET'])
+def get_vote_object(request):
+    pk = request.GET.get("pk")
+    activity = models.Activity.objects.get(pk=pk)
+    total_votes = activity.voters.count()
+    if request.user.is_authenticated:
+        if request.user in activity.voters.all():
+            return Response({
+                "total": total_votes,
+                "is_voted": True
+            })
+    return Response({
+        "total": total_votes,
+        "is_voted": False
+    })
+
+
 def make_temp(request):
     items = models.Activity.objects.all()
     for item in items:

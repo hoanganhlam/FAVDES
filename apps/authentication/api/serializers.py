@@ -3,7 +3,8 @@ from django.contrib.auth.models import User
 from apps.authentication.models import Profile
 from rest_auth.registration.serializers import RegisterSerializer
 from apps.media.api.serializers import MediaSerializer
-from apps.activity.actions import is_following
+from apps.activity.models import Follow, Activity
+from django.contrib.contenttypes.models import ContentType
 
 
 class ProfileSerializer(serializers.ModelSerializer):
@@ -18,23 +19,43 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
-    is_following = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'username', 'profile', 'is_following', 'is_staff']
+        fields = ['id', 'first_name', 'last_name', 'username', 'profile', 'is_staff']
 
     def get_profile(self, instance):
         if hasattr(instance, 'profile'):
             return ProfileSerializer(instance.profile).data
         return None
 
-    def get_is_following(self, instance):
-        if self.context.get("request"):
-            user = self.context.get("request").user
-            if user.is_authenticated:
-                return is_following(user, instance)
-        return False
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
+    statistic = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'username', 'profile', 'is_staff', 'statistic']
+
+    def get_profile(self, instance):
+        if hasattr(instance, 'profile'):
+            return ProfileSerializer(instance.profile).data
+        return None
+
+    def get_statistic(self, instance):
+        content_type = ContentType.objects.get_for_model(instance)
+        return {
+            "activity": Activity.objects.filter(
+                actor_content_type=content_type,
+                actor_object_id=instance.pk
+            ).count(),
+            "following": Follow.objects.filter(user=instance).count(),
+            "follower": Follow.objects.filter(
+                content_type=content_type,
+                object_id=instance.pk
+            ).count()
+        }
 
 
 class NameRegistrationSerializer(RegisterSerializer):
