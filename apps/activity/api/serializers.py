@@ -29,10 +29,11 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class ActivitySerializer(serializers.ModelSerializer):
+    taxonomies = serializers.SerializerMethodField()
 
     class Meta:
         model = models.Activity
-        fields = ['id', 'verb', 'created', 'address', 'temp']
+        fields = ['id', 'verb', 'created', 'address', 'temp', 'taxonomies']
 
     def to_representation(self, instance):
         self.fields['address'] = DAddressSerializer(read_only=True)
