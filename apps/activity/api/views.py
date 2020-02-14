@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 from apps.authentication.models import Profile
 from apps.media.models import Media
 from utils.other import get_addresses
-
+import json
 
 # from datetime import datetime
 
@@ -67,7 +67,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
 class ActivityViewSet(viewsets.ModelViewSet):
     models = models.Activity
-    queryset = models.objects.order_by('-id')
+    queryset = models.objects.order_by('-id').select_related('address')
     serializer_class = serializers.ActivitySerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
@@ -303,6 +303,16 @@ def get_vote_object(request):
         "total": total_votes,
         "is_voted": False
     })
+
+
+@api_view(['GET'])
+def fetch_activity(request):
+    queryset = models.Activity.objects.select_related('address').all()
+    results = []
+    for record in queryset[:10]:
+        json_obj = serializers.serialize_activity(record)
+        results.append(json_obj)
+    return Response(results)
 
 
 def make_temp(request):

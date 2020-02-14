@@ -81,3 +81,4 @@ def ranking(request):
             test = models.DAR(time=rank_date, destination=destination, count=count)
             test.save()
     return Response({})
+

@@ -18,4 +18,5 @@ urlpatterns = [
     url(r'^check-vote', views.get_vote_object),
     url(r'^import', views.import_data),
     url(r'^regenerate', views.make_temp),
+    url(r'^fetch-activities', views.fetch_activity),
 ]

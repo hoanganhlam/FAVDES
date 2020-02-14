@@ -3,6 +3,7 @@ from rest_framework import serializers
 from apps.media.api.serializers import MediaSerializer
 from apps.authentication.api.serializers import UserSerializer
 from apps.destination.api.serializers import DAddressSerializer, DestinationSerializer
+from typing import Dict, Any
 
 
 class TaxonomySerializer(serializers.ModelSerializer):
@@ -40,8 +41,6 @@ class ActivitySerializer(serializers.ModelSerializer):
         return super(ActivitySerializer, self).to_representation(instance)
 
     def get_taxonomies(self, instance):
-        if instance.action_object.__class__.__name__ == "Post":
-            return TaxonomySerializer(instance.action_object.taxonomies.all(), many=True).data
         return []
 
 
@@ -69,6 +68,17 @@ class CommentSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         self.fields['user'] = UserSerializer(read_only=True)
         return super(CommentSerializer, self).to_representation(instance)
+
+
+def serialize_activity(activity: models.Activity) -> Dict[str, Any]:
+    return {
+        'id': activity.id,
+        'verb': activity.verb,
+        'address': DAddressSerializer(activity.address).data,
+        'temp': activity.temp,
+        # 'taxonomies': activity.taxonomies,
+        'created': activity.created
+    }
 
 
 def convert_serializer(instance):
