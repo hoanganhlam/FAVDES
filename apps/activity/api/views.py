@@ -67,7 +67,7 @@ class PostViewSet(viewsets.ModelViewSet):
 
 class ActivityViewSet(viewsets.ModelViewSet):
     models = models.Activity
-    queryset = models.objects.order_by('-id').select_related('address')
+    queryset = models.objects.order_by('-id').select_related('address').prefetch_related('address__destinations')
     serializer_class = serializers.ActivitySerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
