@@ -3,7 +3,6 @@ from base import interface
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.contrib.auth.models import User
 from apps.media.models import Media
-from django.db.models import Q, Sum
 
 
 # Create your models here.

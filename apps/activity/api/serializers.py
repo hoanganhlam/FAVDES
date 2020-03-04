@@ -1,14 +1,16 @@
-from apps.activity import models
 from rest_framework import serializers
+from apps.activity.models import Post, Activity, Follow, Comment, Taxonomy
+from apps.destination.models import Destination, Address
 from apps.media.api.serializers import MediaSerializer
 from apps.authentication.api.serializers import UserSerializer
-from apps.destination.api.serializers import DAddressSerializer, DestinationSerializer
-from typing import Dict, Any
+from apps.destination.api.serializers import DAddressSerializer, DestinationSerializer, AddressSerializer
+from generic_relations.relations import GenericRelatedField
+from django.contrib.auth.models import User
 
 
 class TaxonomySerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Taxonomy
+        model = Taxonomy
         fields = '__all__'
         extra_kwargs = {
             'slug': {'read_only': True}
@@ -17,7 +19,7 @@ class TaxonomySerializer(serializers.ModelSerializer):
 
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
-        model = models.Post
+        model = Post
         fields = '__all__'
         extra_kwargs = {
             'slug': {'read_only': True},
@@ -30,25 +32,43 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class ActivitySerializer(serializers.ModelSerializer):
-    taxonomies = serializers.SerializerMethodField()
+    actor = GenericRelatedField({
+        User: UserSerializer(),
+        Post: PostSerializer(),
+        Destination: DestinationSerializer(),
+        Address: AddressSerializer()
+    })
+    target = GenericRelatedField({
+        User: UserSerializer(),
+        Post: PostSerializer(),
+        Destination: DestinationSerializer(),
+        Address: AddressSerializer()
+    })
+    action_object = GenericRelatedField({
+        User: UserSerializer(),
+        Post: PostSerializer(),
+        Destination: DestinationSerializer(),
+        Address: AddressSerializer()
+    })
 
     class Meta:
-        model = models.Activity
-        fields = ['id', 'verb', 'created', 'address', 'temp', 'taxonomies']
+        model = Activity
+        fields = [
+            'id', 'verb',
+            'created', 'address', 'actor', 'actor_content_type', 'target',
+            'action_object',
+            'action_object_content_type']
 
     def to_representation(self, instance):
         self.fields['address'] = DAddressSerializer(read_only=True)
         return super(ActivitySerializer, self).to_representation(instance)
-
-    def get_taxonomies(self, instance):
-        return []
 
 
 class CommentSerializer(serializers.ModelSerializer):
     is_voted = serializers.SerializerMethodField()
 
     class Meta:
-        model = models.Comment
+        model = Comment
         fields = '__all__'
         extra_fields = ['is_voted']
         extra_kwargs = {
@@ -68,37 +88,3 @@ class CommentSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         self.fields['user'] = UserSerializer(read_only=True)
         return super(CommentSerializer, self).to_representation(instance)
-
-
-def serialize_activity(activity: models.Activity) -> Dict[str, Any]:
-    return {
-        'id': activity.id,
-        'verb': activity.verb,
-        'address': DAddressSerializer(activity.address).data,
-        'temp': activity.temp,
-        # 'taxonomies': activity.taxonomies,
-        'created': activity.created
-    }
-
-
-def convert_serializer(instance):
-    out = {}
-    if instance:
-        if instance.__class__.__name__ == "User":
-            out = UserSerializer(instance).data
-        elif instance.__class__.__name__ == "Destination":
-            out = DestinationSerializer(instance).data
-        elif instance.__class__.__name__ == "Post":
-            out = PostSerializer(instance).data
-        elif instance.__class__.__name__ == "Comment":
-            out = CommentSerializer(instance).data
-        elif instance.__class__.__name__ == "Address":
-            destination = instance.destinations.first()
-            if destination:
-                out = DestinationSerializer(destination).data
-                out["model_name"] = destination.__class__.__name__
-            return out
-        if out:
-            out["model_name"] = instance.__class__.__name__
-            return out
-    return None

@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions
 from rest_framework.filters import OrderingFilter, SearchFilter
 from base import pagination
 from . import serializers
-from apps.activity import models
+from apps.activity.models import Activity, Post, Taxonomy, Comment, Follow
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -14,13 +14,13 @@ from django.contrib.auth.models import User
 from apps.authentication.models import Profile
 from apps.media.models import Media
 from utils.other import get_addresses
-import json
+
 
 # from datetime import datetime
 
 
 class TaxonomyViewSet(viewsets.ModelViewSet):
-    models = models.Taxonomy
+    models = Taxonomy
     queryset = models.objects.order_by('-id')
     serializer_class = serializers.TaxonomySerializer
     permission_classes = permissions.AllowAny,
@@ -31,7 +31,7 @@ class TaxonomyViewSet(viewsets.ModelViewSet):
 
 
 class PostViewSet(viewsets.ModelViewSet):
-    models = models.Post
+    models = Post
     queryset = models.objects.order_by('-id')
     serializer_class = serializers.PostSerializer
     permission_classes = permissions.AllowAny,
@@ -66,8 +66,11 @@ class PostViewSet(viewsets.ModelViewSet):
 
 
 class ActivityViewSet(viewsets.ModelViewSet):
-    models = models.Activity
-    queryset = models.objects.order_by('-id').select_related('address').prefetch_related('address__destinations')
+    models = Activity
+    queryset = models.objects.order_by('-id') \
+        .select_related('address') \
+        .prefetch_related('address__destinations') \
+        .fetch_generic_relations()
     serializer_class = serializers.ActivitySerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
@@ -90,7 +93,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
         address_id = self.request.GET.get('address')
         hashtag = self.request.GET.get('hashtag')
         if hashtag:
-            posts = models.Post.objects.filter(taxonomies__slug=hashtag)
+            posts = Post.objects.filter(taxonomies__slug=hashtag)
             q_and = q_and & Q(action_object_content_type__model="post") & Q(
                 action_object_object_id__in=list(map(lambda x: str(x.get("id")), posts.values('id'))))
         if destination_id:
@@ -130,7 +133,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
                     actor_object_id=user.pk
                 )
                 # Lấy danh sách follow bởi user
-                follows = models.Follow.objects.filter(user=user)
+                follows = Follow.objects.filter(user=user)
                 content_types = ContentType.objects.filter(
                     pk__in=follows.values('content_type_id')
                 )
@@ -148,19 +151,11 @@ class ActivityViewSet(viewsets.ModelViewSet):
                         action_object_object_id__in=object_ids.filter(actor_only=False).values('object_id')
                     )
         self.queryset = queryset.filter(q_or & q_and, **kwargs)
-        for item in self.queryset:
-            if item.temp is None:
-                item.temp = {
-                    "actor": serializers.convert_serializer(item.actor),
-                    "action_object": serializers.convert_serializer(item.action_object),
-                    "target": serializers.convert_serializer(item.target)
-                }
-                item.save()
         return super(ActivityViewSet, self).list(request, *args, **kwargs)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    models = models.Comment
+    models = Comment
     queryset = models.objects.order_by('-id')
     serializer_class = serializers.CommentSerializer
     permission_classes = permissions.AllowAny,
@@ -181,7 +176,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 def import_data(request):
     if not request.user.is_authenticated:
         return Response({})
-    instance = models.Post.objects.filter(source__pexels=request.data.get("id")).first()
+    instance = Post.objects.filter(source__pexels=request.data.get("id")).first()
     if instance is None:
         media = Media.objects.save_url(url=request.data.get("download"))
         if media:
@@ -192,7 +187,7 @@ def import_data(request):
                 user = User.objects.create_user(username=username, password="DKM@VKL1234$#@!")
                 Profile.objects.create(user=user, nick=fullname)
             source = {"pexels": request.data.get("id")}
-            instance = models.Post(user=user, source=source, content=request.data.get("title"))
+            instance = Post(user=user, source=source, content=request.data.get("title"))
             instance.save()
             instance.medias.add(media)
             address = None
@@ -210,7 +205,7 @@ def vote_post(request, pk):
     if not request.user.is_authenticated:
         result = False
     else:
-        post = models.Activity.objects.get(pk=pk)
+        post = Activity.objects.get(pk=pk)
         if user in post.voters.all():
             post.voters.remove(user)
             result = False
@@ -228,7 +223,7 @@ def vote_comment(request, pk):
     if not user.is_authenticated:
         result = False
     else:
-        instance = models.Comment.objects.get(pk=pk)
+        instance = Comment.objects.get(pk=pk)
         if user in instance.voters.all():
             instance.voters.remove(user)
             result = False
@@ -248,9 +243,9 @@ def follow(request):
     if not request.user.is_authenticated:
         return Response(False)
     else:
-        instance = models.Follow.objects.filter(user=user, content_type_id=content_type_id, object_id=object_id).first()
+        instance = Follow.objects.filter(user=user, content_type_id=content_type_id, object_id=object_id).first()
         if instance is None:
-            instance = models.Follow(user=user, content_type_id=content_type_id, object_id=object_id)
+            instance = Follow(user=user, content_type_id=content_type_id, object_id=object_id)
             instance.save()
             return Response(True)
         else:
@@ -278,7 +273,7 @@ def is_following(request):
     if request.user.is_authenticated:
         content_type_id = request.GET.get("contentType")
         object_id = request.GET.get("objectId")
-        instance = models.Follow.objects.filter(
+        instance = Follow.objects.filter(
             user=request.user,
             content_type_id=content_type_id,
             object_id=object_id
@@ -291,7 +286,7 @@ def is_following(request):
 @api_view(['GET'])
 def get_vote_object(request):
     pk = request.GET.get("pk")
-    activity = models.Activity.objects.get(pk=pk)
+    activity = Activity.objects.get(pk=pk)
     total_votes = activity.voters.count()
     if request.user.is_authenticated:
         if request.user in activity.voters.all():
@@ -303,25 +298,3 @@ def get_vote_object(request):
         "total": total_votes,
         "is_voted": False
     })
-
-
-@api_view(['GET'])
-def fetch_activity(request):
-    queryset = models.Activity.objects.select_related('address').all()
-    results = []
-    for record in queryset[:10]:
-        json_obj = serializers.serialize_activity(record)
-        results.append(json_obj)
-    return Response(results)
-
-
-def make_temp(request):
-    items = models.Activity.objects.all()
-    for item in items:
-        item.temp = {
-            "actor": serializers.convert_serializer(item.actor),
-            "action_object": serializers.convert_serializer(item.action_object),
-            "target": serializers.convert_serializer(item.target)
-        }
-        item.save()
-    return Response(True)

@@ -3,6 +3,7 @@ from base import interface
 from django.contrib.auth.models import User
 from apps.media.models import Media
 from apps.destination.models import Address, DAR
+from apps.activity.managers import ActionManager
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.fields import JSONField, ArrayField
@@ -58,8 +59,7 @@ class Activity(interface.BaseModel):
 
     voters = models.ManyToManyField(User, blank=True, related_name='voted_activities')
     tagged = models.ManyToManyField(User, blank=True, related_name='tagged_activities')
-
-    temp = JSONField(null=True, blank=True)
+    objects = ActionManager()
 
     def __str__(self):
         ctx = {
@@ -90,7 +90,6 @@ class Activity(interface.BaseModel):
                     test = DAR(time=self.created, destination=destination, count=count)
                 else:
                     test.count = test.count + 1
-                print(test.count)
                 test.save()
 
 

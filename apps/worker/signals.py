@@ -1,10 +1,9 @@
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_save
 from django.dispatch import receiver
 from apps.activity import action, actions
 from apps.activity.models import Activity, Post
-from apps.destination.models import Destination, Address
 from base.db.redis import rediscontroller
-from apps.activity.api.serializers import ActivitySerializer, convert_serializer
+from apps.activity.api.serializers import ActivitySerializer
 import json
 from apps.activity import verbs
 from django.db.models import Q
@@ -37,13 +36,6 @@ def activity_create(sender, instance, created, **kwargs):
         except Exception as e:
             print(e)
         instance.make_dar()
-    if instance.temp is None:
-        instance.temp = {
-            "actor": convert_serializer(instance.actor),
-            "action_object": convert_serializer(instance.action_object),
-            "target": convert_serializer(instance.target)
-        }
-        instance.save()
 
 
 @receiver(post_save, sender=Post)
