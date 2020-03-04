@@ -17,7 +17,6 @@ import sys
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
@@ -28,7 +27,6 @@ SECRET_KEY = '4b_n_^ewh8i3nyyq#-+$r11c)%dd#q5jj@6go1&h-$)4&ym5vh'
 DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
-
 
 # Application definition
 
@@ -49,6 +47,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.facebook',
     'allauth.socialaccount.providers.google',
     'rest_auth.registration',
+    'generic_relations',
     'apps.media',
     'apps.destination',
     'apps.worker',
@@ -98,7 +97,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'favdes.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
@@ -108,11 +106,10 @@ DATABASES = {
         'NAME': os.getenv('POSTGRES_DBNAME', 'favdes'),
         'USER': os.getenv('POSTGRES_USER', 'lam'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'trip.vn'),
-        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+        'HOST': os.getenv('POSTGRES_HOST', '198.13.35.118'),
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -132,7 +129,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
@@ -145,7 +141,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 JWT_AUTH = {
     'JWT_ALLOW_REFRESH': True,
@@ -201,7 +196,6 @@ ACCOUNT_AUTHENTICATION_METHOD = 'email'
 REST_AUTH_REGISTER_SERIALIZERS = {
     'REGISTER_SERIALIZER': 'apps.authentication.api.serializers.NameRegistrationSerializer',
 }
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
