@@ -65,9 +65,8 @@ class PostViewSet(viewsets.ModelViewSet):
 
 class ActivityViewSet(viewsets.ModelViewSet):
     models = Activity
-    queryset = models.objects.order_by('-id') \
-        .select_related('address') \
-        .prefetch_related('address__destinations', 'actor', 'action_object', 'target')
+    queryset = models.objects.raw(
+        "SELECT activity_activity.id, activity_activity.updated, activity_activity.created, activity_activity.verb, activity_activity.actor_content_type_id, activity_activity.actor_object_id, activity_activity.action_object_content_type_id, activity_activity.action_object_object_id, activity_activity.target_content_type_id, activity_activity.target_object_id, activity_activity.address_id, destination_address.id, destination_address.updated, destination_address.created, destination_address.address_components, destination_address.geometry, destination_address.formatted_address, destination_address.place_id, destination_address.types FROM activity_activity LEFT OUTER JOIN destination_address ON (activity_activity.address_id = destination_address.id) WHERE ( (activity_activity.target_content_type_id = '4' AND activity_activity.target_object_id = '1') OR (activity_activity.action_object_content_type_id = '4' AND activity_activity.action_object_object_id = '1') OR (activity_activity.actor_content_type_id = '4' AND activity_activity.actor_object_id = '1') ) ORDER BY activity_activity.id DESC")
     serializer_class = serializers.ActivitySerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
@@ -75,6 +74,80 @@ class ActivityViewSet(viewsets.ModelViewSet):
     lookup_field = 'pk'
 
     def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        ordering = self.request.GET.get('ordering')
+        if ordering == 'popular':
+            queryset = self.models.objects.annotate(vot_count=Count('votes'), comt_count=Count('comments')) \
+                .order_by('-vot_count', '-comt_count')
+        # Query
+        q_or = Q()
+        q_and = Q()
+        user = self.request.user
+        target_id = self.request.GET.get('target')
+        target_content_id = self.request.GET.get('target_content')
+        destination_id = self.request.GET.get('destination')
+        address_id = self.request.GET.get('address')
+        hash_tag = self.request.GET.get('hash_tag')
+        if hash_tag:
+            posts = Post.objects.filter(taxonomies__slug=hash_tag)
+            q_and = q_and & Q(action_object_content_type__model="post") & Q(
+                action_object_object_id__in=list(map(lambda x: str(x.get("id")), posts.values('id'))))
+        if destination_id:
+            destination = Destination.objects.get(pk=destination_id)
+            destinations = destination.get_all_children()
+            addresses = Address.objects.filter(destinations__id__in=(element.pk for element in destinations))
+            q_and = q_and & Q(
+                address__id__in=addresses.values('id')
+            )
+        if address_id:
+            q_and = q_and & Q(
+                address__id=address_id
+            )
+        if target_id and target_content_id:
+            q_temp = Q(
+                target_content_type__id=str(target_content_id),
+                target_object_id=str(target_id)
+            ) | Q(
+                action_object_content_type=str(target_content_id),
+                action_object_object_id=str(target_id),
+            ) | Q(
+                actor_content_type=str(target_content_id),
+                actor_object_id=str(target_id)
+            )
+            q_and = q_and & q_temp
+        if target_id is None and target_content_id is None and destination_id is None:
+            # Lấy những activty target đến current_user
+            if user.is_authenticated and not user.is_staff:
+                q_or = q_or | Q(
+                    target_content_type=ContentType.objects.get_for_model(user),
+                    target_object_id=user.pk
+                ) | Q(
+                    action_object_content_type=ContentType.objects.get_for_model(user),
+                    action_object_object_id=user.pk
+                ) | Q(
+                    actor_content_type=ContentType.objects.get_for_model(user),
+                    actor_object_id=user.pk
+                )
+                # Lấy danh sách follow bởi user
+                follows = Follow.objects.filter(user=user)
+                content_types = ContentType.objects.filter(
+                    pk__in=follows.values('content_type_id')
+                )
+
+                for content_type in content_types:
+                    object_ids = follows.filter(content_type=content_type)
+                    q_or = q_or | Q(
+                        actor_content_type=content_type,
+                        actor_object_id__in=object_ids.values('object_id')
+                    ) | Q(
+                        target_content_type=content_type,
+                        target_object_id__in=object_ids.filter(actor_only=False).values('object_id')
+                    ) | Q(
+                        action_object_content_type=content_type,
+                        action_object_object_id__in=object_ids.filter(actor_only=False).values('object_id')
+                    )
+        # self.queryset = queryset.filter(q_or & q_and, **kwargs)
+        print(self.queryset.query)
         return super(ActivityViewSet, self).list(request, *args, **kwargs)
 
 

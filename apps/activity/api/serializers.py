@@ -20,7 +20,7 @@ class TaxonomySerializer(serializers.ModelSerializer):
 class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = '__all__'
+        fields = ['id', 'title', 'content', 'user', 'medias']
         extra_kwargs = {
             'slug': {'read_only': True},
             'user': {'read_only': True},
@@ -55,9 +55,11 @@ class ActivitySerializer(serializers.ModelSerializer):
         model = Activity
         fields = [
             'id', 'verb',
-            'created', 'address', 'actor', 'actor_content_type', 'target',
-            'action_object',
-            'action_object_content_type']
+            'created', 'address',
+            'actor', 'actor_content_type',
+            'target',
+            'action_object', 'action_object_content_type'
+        ]
 
     def to_representation(self, instance):
         self.fields['address'] = DAddressSerializer(read_only=True)
