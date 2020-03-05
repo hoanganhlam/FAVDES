@@ -70,7 +70,9 @@ class ActivityViewSet(viewsets.ModelViewSet):
     queryset = models.objects.order_by('-id') \
         .select_related('address') \
         .prefetch_related('address__destinations') \
-        .fetch_generic_relations()
+        .prefetch_related('actor') \
+        .prefetch_related('action_object') \
+        .prefetch_related('target')
     serializer_class = serializers.ActivitySerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
@@ -91,9 +93,9 @@ class ActivityViewSet(viewsets.ModelViewSet):
         target_content_id = self.request.GET.get('target_content')
         destination_id = self.request.GET.get('destination')
         address_id = self.request.GET.get('address')
-        hashtag = self.request.GET.get('hashtag')
-        if hashtag:
-            posts = Post.objects.filter(taxonomies__slug=hashtag)
+        hash_tag = self.request.GET.get('hashtag')
+        if hash_tag:
+            posts = Post.objects.filter(taxonomies__slug=hash_tag)
             q_and = q_and & Q(action_object_content_type__model="post") & Q(
                 action_object_object_id__in=list(map(lambda x: str(x.get("id")), posts.values('id'))))
         if destination_id:
@@ -156,7 +158,10 @@ class ActivityViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     models = Comment
-    queryset = models.objects.order_by('-id')
+    queryset = models.objects.order_by('-id')\
+        .select_related('user')\
+        .select_related('user__profile')\
+        .select_related('user__profile__media')
     serializer_class = serializers.CommentSerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
@@ -164,8 +169,9 @@ class CommentViewSet(viewsets.ModelViewSet):
     lookup_field = 'pk'
 
     def list(self, request, *args, **kwargs):
-        activity = int(request.GET.get("activity"))
-        self.queryset = self.queryset.filter(activity__id=activity)
+        activity = request.GET.get("activity")
+        if activity:
+            self.queryset = self.queryset.filter(activity__id=int(activity))
         return super(CommentViewSet, self).list(request, *args, **kwargs)
 
     def perform_create(self, serializer):

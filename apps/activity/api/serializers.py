@@ -65,25 +65,13 @@ class ActivitySerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    is_voted = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
         fields = '__all__'
-        extra_fields = ['is_voted']
         extra_kwargs = {
             'user': {'read_only': True}
         }
-
-    def get_field_names(self, declared_fields, info):
-        expanded_fields = super(CommentSerializer, self).get_field_names(declared_fields, info)
-
-        if getattr(self.Meta, 'extra_fields', None):
-            return expanded_fields + self.Meta.extra_fields
-
-    def get_is_voted(self, instance):
-        user = self.context['request'].user
-        return user in instance.voters.all()
 
     def to_representation(self, instance):
         self.fields['user'] = UserSerializer(read_only=True)

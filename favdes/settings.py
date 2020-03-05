@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 import os
 import datetime
 import sys
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -106,7 +108,7 @@ DATABASES = {
         'NAME': os.getenv('POSTGRES_DBNAME', 'favdes'),
         'USER': os.getenv('POSTGRES_USER', 'lam'),
         'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'trip.vn'),
-        'HOST': os.getenv('POSTGRES_HOST', '198.13.35.118'),
+        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
