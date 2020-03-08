@@ -5,20 +5,27 @@ from . import serializers
 from apps.media import models
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
-
+from sorl.thumbnail import get_thumbnail
 
 # from datetime import datetime
 
 
 class MediaViewSet(viewsets.ModelViewSet):
     models = models.Media
-    queryset = models.objects.order_by('-id')
+    queryset = models.objects.order_by('-id').select_related('user').prefetch_related('taxonomies', 'user__profile')
     serializer_class = serializers.MediaSerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
     filter_backends = [OrderingFilter, SearchFilter]
     search_fields = ['title', 'description']
     lookup_field = 'pk'
+
+    def list(self, request, *args, **kwargs):
+        for item in self.queryset:
+            get_thumbnail(item.path, '270x270', crop='center', quality=100)
+            get_thumbnail(item.path, '540x540', crop='center', quality=100)
+            get_thumbnail(item.path, '540', crop='noop', quality=100)
+        return super(MediaViewSet, self).list(request, *args, **kwargs)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', True)

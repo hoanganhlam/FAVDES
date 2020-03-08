@@ -3,6 +3,7 @@ from base import interface
 from django.contrib.postgres.fields import JSONField, ArrayField
 from django.contrib.auth.models import User
 from apps.media.models import Media
+from apps.general.models import Taxonomy
 
 
 # Create your models here.
@@ -38,6 +39,7 @@ class Destination(interface.BaseModel, interface.Taxonomy):
     photos = models.ManyToManyField(Media, blank=True, related_name='destinations')
     contact = JSONField(null=True, blank=True)
     flags = ArrayField(models.CharField(max_length=50, null=True, blank=True), null=True, blank=True)
+    taxonomies = models.ManyToManyField(Taxonomy, related_name="destinations", blank=True)
 
     def __str__(self):
         return str(self.id) + ": " + self.title

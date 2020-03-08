@@ -75,11 +75,13 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'rest_auth.registration',
     'generic_relations',
+    'apps.general',
     'apps.media',
     'apps.destination',
     'apps.worker',
     'apps.activity',
-    'apps.authentication'
+    'apps.authentication',
+    'apps.trip'
 ]
 
 MIDDLEWARE = [
@@ -240,3 +242,4 @@ AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY') or 'ZikZHXpG2bZXzCo+7
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 THUMBNAIL_FORCE_OVERWRITE = True
+THUMBNAIL_BACKEND = 'apps.media.backend.CThumbnailBackend'

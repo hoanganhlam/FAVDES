@@ -2,30 +2,17 @@ from rest_framework import viewsets, permissions
 from rest_framework.filters import OrderingFilter, SearchFilter
 from base import pagination
 from . import serializers
-from apps.activity.models import Activity, Post, Taxonomy, Comment, Follow
+from apps.activity.models import Activity, Post, Comment, Follow
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from apps.activity import action
 from apps.destination.models import Address, Destination
-from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q, Count
 from django.contrib.auth.models import User
 from apps.authentication.models import Profile
 from apps.media.models import Media
 from utils.other import get_addresses
-from django.db.models import Prefetch
-
-
-class TaxonomyViewSet(viewsets.ModelViewSet):
-    models = Taxonomy
-    queryset = models.objects.order_by('-id')
-    serializer_class = serializers.TaxonomySerializer
-    permission_classes = permissions.AllowAny,
-    pagination_class = pagination.Pagination
-    filter_backends = [OrderingFilter, SearchFilter]
-    search_fields = ['title']
-    lookup_field = 'slug'
+from django.db import connection
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -75,7 +62,31 @@ class ActivityViewSet(viewsets.ModelViewSet):
     lookup_field = 'pk'
 
     def list(self, request, *args, **kwargs):
-        return super(ActivityViewSet, self).list(request, *args, **kwargs)
+        search = self.request.GET.get('search')
+        target_id = self.request.GET.get('target')
+        target_content_id = self.request.GET.get('target_content')
+        destination_id = self.request.GET.get('destination')
+        address_id = self.request.GET.get('address')
+        hash_tag = self.request.GET.get('hash_tag')
+        page_size = 10 if self.request.GET.get('page_size') is None else int(self.request.GET.get('page_size'))
+        page = 1 if self.request.GET.get('page') is None else int(self.request.GET.get('page'))
+        offs3t = page_size * page - page_size
+        user_id = self.request.user.id if self.request.user.is_authenticated else None
+        with connection.cursor() as cursor:
+            out = {}
+            cursor.execute("SELECT COUNT_ACTIVITIES(%s, %s, %s)", [search, target_content_id, target_id])
+            out["count"] = cursor.fetchone()[0]
+            cursor.execute("SELECT FETCH_ACTIVITIES(%s, %s, %s, %s, %s, %s)",
+                           [page_size, offs3t, search, target_content_id, target_id, user_id])
+            out["results"] = cursor.fetchone()[0]
+            return Response(out)
+
+    def retrieve(self, request, *args, **kwargs):
+        user_id = self.request.user.id if self.request.user.is_authenticated else None
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT FETCH_ACTION(%s, %s)", [kwargs.get("pk"), user_id])
+            out = cursor.fetchone()[0]
+        return Response(out)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -179,21 +190,6 @@ def follow(request):
         else:
             instance.delete()
             return Response(False)
-
-
-@api_view(['GET'])
-def get_config(request):
-    return Response(
-        {
-            "content_type": {
-                "destination": ContentType.objects.get(model="destination").pk,
-                "user": ContentType.objects.get(model="user").pk,
-                "post": ContentType.objects.get(model="post", app_label="activity").pk,
-                "address": ContentType.objects.get(model="address").pk,
-                "activity": ContentType.objects.get(model="activity").pk,
-            }
-        }
-    )
 
 
 @api_view(['GET'])

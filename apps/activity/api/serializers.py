@@ -1,20 +1,11 @@
 from rest_framework import serializers
-from apps.activity.models import Post, Activity, Follow, Comment, Taxonomy
+from apps.activity.models import Post, Activity, Comment
 from apps.destination.models import Destination, Address
 from apps.media.api.serializers import MediaSerializer
 from apps.authentication.api.serializers import UserSerializer
 from apps.destination.api.serializers import DAddressSerializer, DestinationSerializer, AddressSerializer
 from generic_relations.relations import GenericRelatedField
 from django.contrib.auth.models import User
-
-
-class TaxonomySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Taxonomy
-        fields = '__all__'
-        extra_kwargs = {
-            'slug': {'read_only': True}
-        }
 
 
 class PostSerializer(serializers.ModelSerializer):

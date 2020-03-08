@@ -58,8 +58,8 @@ class MediaSerializer(serializers.ModelSerializer):
     def get_sizes(self, instance):
         if instance.path:
             return {
-                "270_270": get_thumbnail(instance.path, '270x270', crop='center', quality=100).url,
-                "540_540": get_thumbnail(instance.path, '540x540', crop='center', quality=100).url,
+                "thumb_270_270": get_thumbnail(instance.path, '270x270', crop='center', quality=100).url,
+                "thumb_540_540": get_thumbnail(instance.path, '540x540', crop='center', quality=100).url,
                 "resize": get_thumbnail(instance.path, '540', crop='noop', quality=100).url
             }
         else:

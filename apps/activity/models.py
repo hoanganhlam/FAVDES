@@ -3,20 +3,17 @@ from base import interface
 from django.contrib.auth.models import User
 from apps.media.models import Media
 from apps.destination.models import Address, DAR
+from apps.general.models import Taxonomy
 from apps.activity.managers import ActionManager
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import JSONField
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from django.utils.translation import ugettext as _
 
 # Create your models here.
 now = timezone.now
-
-
-class Taxonomy(interface.Taxonomy, interface.BaseModel):
-    flag = models.CharField(max_length=50, default="NORMAL")
 
 
 class Post(interface.BaseModel):
