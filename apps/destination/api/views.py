@@ -26,6 +26,12 @@ class DestinationViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         return super(DestinationViewSet, self).list(request, *args, **kwargs)
 
+    def create(self, request, *args, **kwargs):
+        return super(DestinationViewSet, self).create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
 
 class AddressViewSet(viewsets.ModelViewSet):
     models = models.Address
@@ -36,6 +42,14 @@ class AddressViewSet(viewsets.ModelViewSet):
     filter_backends = [OrderingFilter, SearchFilter]
     search_fields = ['formatted_address']
     lookup_field = 'pk'
+
+    def create(self, request, *args, **kwargs):
+        place_id = request.data.get("place_id")
+        if place_id:
+            address = models.Address.objects.filter(place_id=place_id).first()
+            if address:
+                return Response(serializers.DAddressSerializer(address).data)
+        return super(AddressViewSet, self).create(request, *args, **kwargs)
 
 
 class SearchAddressViewSet(viewsets.ModelViewSet):
@@ -81,4 +95,3 @@ def ranking(request):
             test = models.DAR(time=rank_date, destination=destination, count=count)
             test.save()
     return Response({})
-

@@ -22,10 +22,9 @@ class Address(interface.BaseModel):
 
 class SearchAddress(interface.BaseModel):
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="searches")
-    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name='searches')
     search_keyword = models.CharField(max_length=200, null=True, blank=True)
-    tracking_ip = models.CharField(max_length=50, null=True, blank=True)
     count = models.IntegerField(default=1)
+    addresses = models.ManyToManyField(Address, blank=True, related_name='searches')
 
     def __str__(self):
         return self.search_keyword
@@ -34,12 +33,15 @@ class SearchAddress(interface.BaseModel):
 class Destination(interface.BaseModel, interface.Taxonomy):
     title = models.CharField(max_length=120)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="destinations")
-    parent = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
+    parent_destination = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name='children')
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name='destinations')
-    photos = models.ManyToManyField(Media, blank=True, related_name='destinations')
+    medias = models.ManyToManyField(Media, blank=True, related_name='destinations')
     contact = JSONField(null=True, blank=True)
     flags = ArrayField(models.CharField(max_length=50, null=True, blank=True), null=True, blank=True)
     taxonomies = models.ManyToManyField(Taxonomy, related_name="destinations", blank=True)
+
+    level = models.IntegerField(default=0)
+    process = models.IntegerField(default=0)
 
     def __str__(self):
         return str(self.id) + ": " + self.title
@@ -62,3 +64,9 @@ class DAR(interface.BaseModel):
 
     def __str__(self):
         return str(self.time) + ": " + self.destination.title
+
+
+class DestinationContribution(interface.BaseModel):
+    user = models.ForeignKey(User, related_name='destination_contributions', on_delete=models.CASCADE)
+    data = JSONField()
+    destination = models.ForeignKey(Destination, related_name='destination_contributions', on_delete=models.CASCADE)

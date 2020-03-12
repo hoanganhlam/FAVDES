@@ -25,9 +25,10 @@ def convert_location(address):
         name = formatted_address_arr[0]
     destination = d_models.Destination.objects.filter(address__formatted_address=address.formatted_address).first()
     if destination is None:
-        destination = d_models.Destination(address=address, title=name)
+        destination = d_models.Destination(address=address, title=name, level=len(formatted_address_arr))
     else:
         destination.address = address
+        destination.level = len(formatted_address_arr)
     destination.save()
     return destination
 
@@ -69,13 +70,13 @@ def get_parent(ids):
             if results and len(results) > 0:
                 address, result = make_address(results[0])
                 if parent and result.id != parent.id:
-                    result.parent = parent
+                    result.parent_destination = parent
                     result.save()
                 if result:
                     parent = result
     if parent and c_result:
-        if c_result.parent is None or (c_result.parent and c_result.parent.id != parent.id):
-            c_result.parent = parent
+        if c_result.parent_destination is None or (c_result.parent_destination and c_result.parent_destination.id != parent.id):
+            c_result.parent_destination = parent
             c_result.save()
     return current_address
 

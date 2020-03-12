@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from apps.destination import models as d_models
 from apps.destination.api.serializers import AddressSerializer
 from utils.location_checker import get_address, get_place_photos, get_places_nearby, reverse_geocode_geo_coding
-from utils.other import get_client_ip, convert_location, make_address, get_parent
+from utils.other import convert_location, make_address, get_parent
 from utils.web_checker import get_web_meta, get_description
 from utils.instagram import get_instagram_by_tag, get_instagram_users
 from rest_framework import viewsets, permissions
@@ -58,27 +58,21 @@ def fetch_address(request):
     search = request.GET.get("search")
     addresses = []
     if search:
-        search_address = d_models.SearchAddress.objects.filter(search_keyword=search, address__isnull=False).first()
+        search_address = d_models.SearchAddress.objects.filter(search_keyword=search).first()
         # Make Address
         if search_address is None:
             results = get_address(search)
+            search_address = d_models.SearchAddress(search_keyword=search)
+            search_address.save()
             for result in results.get("results"):
                 address = get_parent(result)
+                search_address.addresses.add(address)
                 addresses.append(address)
+            search_address.save()
         else:
-            addresses.append(search_address.address)
-            # Handle Search Address
-            ip = get_client_ip(request)
-            search_address = d_models.SearchAddress.objects.filter(search_keyword=search, tracking_ip=ip).first()
-            if search_address is None:
-                d_models.SearchAddress.objects.create(
-                    address=search_address.address,
-                    search_keyword=search,
-                    tracking_ip=get_client_ip(request)
-                )
-            else:
-                search_address.count = search_address.count + 1
-                search_address.save()
+            addresses = search_address.addresses.all()
+            search_address.count = search_address.count + 1
+            search_address.save()
         return Response({
             "results": AddressSerializer(addresses, many=True).data
         })

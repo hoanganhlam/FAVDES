@@ -35,22 +35,22 @@ LOGGING = {
             'format': '%(asctime)s  %(levelname)s  %(process)d  %(filename)s  %(funcName)s  %(lineno)d  %(message)s  '
         },
     },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'console',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-        },
-        'django.db.backends': {
-            'level': 'DEBUG',
-            'handlers': ['console', ],
-        },
-    },
+    # 'handlers': {
+    #     'console': {
+    #         'class': 'logging.StreamHandler',
+    #         'formatter': 'console',
+    #     },
+    # },
+    # 'loggers': {
+    #     'django': {
+    #         'handlers': ['console'],
+    #         'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
+    #     },
+    #     'django.db.backends': {
+    #         'level': 'DEBUG',
+    #         'handlers': ['console', ],
+    #     },
+    # },
 }
 
 ALLOWED_HOSTS = ["*"]
@@ -162,13 +162,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/3.0/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 JWT_AUTH = {

@@ -25,4 +25,5 @@ urlpatterns = [
     url(r'^v1/destination/', include(('apps.destination.api.urls', 'api_destination'), namespace='api_destination')),
     url(r'^v1/worker/', include(('apps.worker.api.urls', 'api_worker'), namespace='api_worker')),
     url(r'^v1/media/', include(('apps.media.api.urls', 'api_media'), namespace='api_media')),
+    url(r'^v1/trip/', include(('apps.trip.api.urls', 'api_trip'), namespace='api_trip')),
 ]

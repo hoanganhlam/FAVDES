@@ -29,23 +29,12 @@ class PostViewSet(viewsets.ModelViewSet):
         return serializer.save(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        address_id = request.data.get("address")
-        address = Address.objects.get(pk=int(address_id))
+        destination_id = request.data.get("destination")
+        destination = Destination.objects.get(pk=int(destination_id))
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         instance = self.perform_create(serializer)
-        destination_name = request.data.get("destination_name")
-        if request.data.get("destination_name"):
-            destination = Destination.objects.filter(address=address, title=destination_name).first()
-            if destination is None:
-                destination = Destination(address=address, title=destination_name, user=request.user)
-                check = address.destinations.first()
-                if check:
-                    destination.parent = check.parent
-                destination.save()
-        else:
-            destination = address.destinations.first()
-        action.send(sender=instance.user, verb='POSTED', action_object=instance, address=address, target=destination)
+        action.send(sender=instance.user, verb='POSTED', action_object=instance, destination=destination)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 

@@ -1,10 +1,10 @@
 from django.db import models
 from base.interface import BaseModel
-from apps.destination.models import Destination
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from apps.general.models import Taxonomy
-
+from apps.destination.models import Destination
+from apps.media.models import Media
 
 # Create your models here.
 
@@ -24,6 +24,7 @@ class Schedule(BaseModel):
     user = models.ForeignKey(User, related_name="schedules", on_delete=models.CASCADE)
     options = JSONField(null=True, blank=True)
     taxonomies = models.ManyToManyField(Taxonomy, related_name="schedules", blank=True)
+    media = models.ForeignKey(Media, related_name="schedules", blank=True, null=True, on_delete=models.SET_NULL)
     privacy = models.CharField(max_length=50, null=True, blank=True)
     allow_users = models.ManyToManyField(User, related_name="allow_view_schedules", blank=True)
     deny_users = models.ManyToManyField(User, related_name="deny_view_schedules", blank=True)
@@ -42,12 +43,14 @@ class ScheduleMember(models.Model):
     schedule = models.ForeignKey(Schedule, related_name="schedule_member", on_delete=models.CASCADE)
 
 
-class Step(BaseModel):
+class Task(BaseModel):
     title = models.CharField(max_length=120, unique=True)
-    Note = models.TextField(max_length=500, blank=True, null=True)
-    trip = models.ForeignKey(Schedule, on_delete=models.CASCADE, related_name="steps")
-    user = models.ForeignKey(User, related_name="steps", on_delete=models.CASCADE)
-    destination = models.ForeignKey(Destination, related_name='steps', on_delete=models.CASCADE, null=True, blank=True)
+    note = models.TextField(max_length=500, blank=True, null=True)
+    schedule = models.ForeignKey(Schedule, on_delete=models.CASCADE, related_name="tasks")
+    user = models.ForeignKey(User, related_name="tasks", on_delete=models.CASCADE)
+    destination = models.ForeignKey(Destination, related_name='tasks', on_delete=models.CASCADE, null=True, blank=True)
+    start_time = models.DateTimeField(null=True, blank=True)
+    end_time = models.DateTimeField(null=True, blank=True)
     options = JSONField(null=True, blank=True)
 
 

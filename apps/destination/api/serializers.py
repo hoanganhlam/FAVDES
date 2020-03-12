@@ -6,13 +6,13 @@ from apps.media.api.serializers import MediaSerializer
 class DestinationSerializer(serializers.ModelSerializer):
     class Meta:
         model = models.Destination
-        fields = ['id', 'title', 'slug', 'description', 'user', 'address', 'photos', 'contact']
+        fields = ['id', 'title', 'slug', 'description', 'user', 'address', 'medias', 'contact']
         extra_kwargs = {
             'slug': {'read_only': True}
         }
 
     def to_representation(self, instance):
-        self.fields['photos'] = MediaSerializer(many=True, read_only=True)
+        self.fields['medias'] = MediaSerializer(many=True, read_only=True)
         self.fields['address'] = AddressSerializer(read_only=True)
         return super(DestinationSerializer, self).to_representation(instance)
 

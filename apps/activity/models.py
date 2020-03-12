@@ -2,7 +2,7 @@ from django.db import models
 from base import interface
 from django.contrib.auth.models import User
 from apps.media.models import Media
-from apps.destination.models import Address, DAR
+from apps.destination.models import Address, DAR, Destination
 from apps.general.models import Taxonomy
 from apps.activity.managers import ActionManager
 from django.contrib.contenttypes.fields import GenericForeignKey
@@ -49,10 +49,12 @@ class Activity(interface.BaseModel):
         related_name='target',
         on_delete=models.CASCADE, db_index=True
     )
+
     target_object_id = models.CharField(max_length=255, blank=True, null=True, db_index=True)
     target = GenericForeignKey('target_content_type', 'target_object_id')
 
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name='activities')
+    destination = models.ForeignKey(Destination, on_delete=models.SET_NULL, null=True, blank=True, related_name='activities')
 
     voters = models.ManyToManyField(User, blank=True, related_name='voted_activities')
     tagged = models.ManyToManyField(User, blank=True, related_name='tagged_activities')
