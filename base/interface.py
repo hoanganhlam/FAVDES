@@ -1,11 +1,19 @@
 from django.db import models
 from utils.slug import unique_slugify
 from django.utils import timezone
+from django.utils.translation import ugettext_lazy as _
 
 
 class BaseModel(models.Model):
+    STATUS_CHOICE = (
+        (-1, _("Deleted")),
+        (0, _("Pending")),
+        (1, _("Active")),
+    )
+
     updated = models.DateTimeField(default=timezone.now)
     created = models.DateTimeField(default=timezone.now)
+    db_status = models.IntegerField(choices=STATUS_CHOICE, default=1)
 
     class Meta:
         abstract = True

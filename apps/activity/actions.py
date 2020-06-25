@@ -117,7 +117,7 @@ def action_handler(verb, **kwargs):
             setattr(new_action, '%s_object_id' % opt, obj.pk)
             setattr(new_action, '%s_content_type' % opt,
                     ContentType.objects.get_for_model(obj))
-    for opt in ('is_activity', 'is_notify', 'address'):
+    for opt in ('is_activity', 'is_notify', 'address', 'destination'):
         obj = kwargs.pop(opt, None)
         if obj is not None:
             setattr(new_action, '%s' % opt, obj)

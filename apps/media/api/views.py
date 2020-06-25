@@ -45,36 +45,6 @@ class MediaViewSet(viewsets.ModelViewSet):
         return serializer.save(user=self.request.user)
 
 
-class MediaTaxonomyViewSet(viewsets.ModelViewSet):
-    models = models.MediaTaxonomy
-    queryset = models.objects.order_by('-id')
-    serializer_class = serializers.MediaTaxonomySerializer
-    permission_classes = permissions.AllowAny,
-    pagination_class = pagination.Pagination
-    filter_backends = [OrderingFilter, SearchFilter]
-    search_fields = ['title', 'description']
-    lookup_field = 'pk'
-
-
-class MediaCommentViewSet(viewsets.ModelViewSet):
-    models = models.MediaComment
-    queryset = models.objects.order_by('-id')
-    serializer_class = serializers.MediaCommentSerializer
-    permission_classes = permissions.AllowAny,
-    pagination_class = pagination.Pagination
-    filter_backends = [OrderingFilter, SearchFilter]
-    search_fields = ['content']
-    lookup_field = 'pk'
-
-    def list(self, request, *args, **kwargs):
-        media = int(request.GET.get("media"))
-        self.queryset = self.queryset.filter(media__id=media)
-        return super(MediaCommentViewSet, self).list(request, *args, **kwargs)
-
-    def perform_create(self, serializer):
-        return serializer.save(user=self.request.user)
-
-
 @api_view(['GET'])
 def is_voted(request, pk):
     if request.user.is_authenticated:

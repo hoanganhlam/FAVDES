@@ -6,8 +6,6 @@ from base.db.redis import rediscontroller
 from apps.activity.api.serializers import ActivitySerializer
 import json
 from apps.activity import verbs
-from django.db.models import Q
-from django.contrib.contenttypes.models import ContentType
 
 redis = rediscontroller.RedisController()
 redis.start()
@@ -36,31 +34,3 @@ def activity_create(sender, instance, created, **kwargs):
         except Exception as e:
             print(e)
         instance.make_dar()
-
-
-@receiver(post_save, sender=Post)
-def post_create(sender, instance, created, **kwargs):
-    if not created:
-        handle_update(instance)
-
-
-def handle_update(instance):
-    ct = ContentType.objects.get_for_model(instance)
-    q = Q(
-        target_content_type=ct,
-        target_object_id=instance.id
-    ) | Q(
-        action_object_content_type=ct,
-        action_object_object_id=instance.id,
-    ) | Q(
-        actor_content_type=ct,
-        actor_object_id=instance.id
-    )
-    activities = Activity.objects.filter(q)
-    for activity in activities:
-        activity.temp = {
-            "actor": convert_serializer(activity.actor),
-            "action_object": convert_serializer(activity.action_object),
-            "target": convert_serializer(activity.target)
-        }
-        activity.save()

@@ -23,6 +23,11 @@ class Post(interface.BaseModel):
     medias = models.ManyToManyField(Media, blank=True, related_name='posts')
     taxonomies = models.ManyToManyField(Taxonomy, blank=True, related_name='posts')
     source = JSONField(null=True, blank=True)
+    address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts')
+    destination = models.ForeignKey(Destination, on_delete=models.SET_NULL, null=True, blank=True, related_name='posts')
+    date_published = models.DateTimeField(default=timezone.now)
+    # POSTED / PENDING / DELETED
+    publish_status = models.CharField(max_length=20, default="POSTED")
 
 
 @python_2_unicode_compatible
@@ -54,7 +59,8 @@ class Activity(interface.BaseModel):
     target = GenericForeignKey('target_content_type', 'target_object_id')
 
     address = models.ForeignKey(Address, on_delete=models.SET_NULL, null=True, blank=True, related_name='activities')
-    destination = models.ForeignKey(Destination, on_delete=models.SET_NULL, null=True, blank=True, related_name='activities')
+    destination = models.ForeignKey(Destination, on_delete=models.SET_NULL, null=True, blank=True,
+                                    related_name='activities')
 
     voters = models.ManyToManyField(User, blank=True, related_name='voted_activities')
     tagged = models.ManyToManyField(User, blank=True, related_name='tagged_activities')

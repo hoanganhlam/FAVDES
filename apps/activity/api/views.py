@@ -13,6 +13,7 @@ from apps.authentication.models import Profile
 from apps.media.models import Media
 from utils.other import get_addresses
 from django.db import connection
+from utils.other import get_paginator
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -51,24 +52,26 @@ class ActivityViewSet(viewsets.ModelViewSet):
     lookup_field = 'pk'
 
     def list(self, request, *args, **kwargs):
-        search = self.request.GET.get('search')
         target_id = self.request.GET.get('target')
         target_content_id = self.request.GET.get('target_content')
         destination_id = self.request.GET.get('destination')
         address_id = self.request.GET.get('address')
         hash_tag = self.request.GET.get('hash_tag')
-        page_size = 10 if self.request.GET.get('page_size') is None else int(self.request.GET.get('page_size'))
-        page = 1 if self.request.GET.get('page') is None else int(self.request.GET.get('page'))
-        offs3t = page_size * page - page_size
-        user_id = self.request.user.id if self.request.user.is_authenticated else None
+        p = get_paginator(request)
+        auth_id = self.request.user.id if self.request.user.is_authenticated else None
         with connection.cursor() as cursor:
-            out = {}
-            cursor.execute("SELECT COUNT_ACTIVITIES(%s, %s, %s)", [search, target_content_id, target_id])
-            out["count"] = cursor.fetchone()[0]
-            cursor.execute("SELECT FETCH_ACTIVITIES(%s, %s, %s, %s, %s, %s)",
-                           [page_size, offs3t, search, target_content_id, target_id, user_id])
-            out["results"] = cursor.fetchone()[0]
-            return Response(out)
+            cursor.execute("SELECT FETCH_ACTIVITIES(%s, %s, %s, %s, %s, %s, %s, %s)",
+                           [
+                               p.get("page_size"),
+                               p.get("offs3t"),
+                               target_content_id,
+                               target_id,
+                               auth_id,
+                               destination_id,
+                               address_id,
+                               '{' + hash_tag + '}' if hash_tag else None
+                           ])
+            return Response(cursor.fetchone()[0])
 
     def retrieve(self, request, *args, **kwargs):
         user_id = self.request.user.id if self.request.user.is_authenticated else None

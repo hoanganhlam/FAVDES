@@ -8,4 +8,5 @@ router.register(r'taxonomies', views.TaxonomyViewSet)
 urlpatterns = [
     url(r'^', include(router.urls)),
     url(r'^config', views.get_config),
+    url(r'^meet-hunter', views.random_user),
 ]

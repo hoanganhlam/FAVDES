@@ -15,7 +15,7 @@ import datetime
 
 class DestinationViewSet(viewsets.ModelViewSet):
     models = models.Destination
-    queryset = models.objects.order_by('-id')
+    queryset = models.objects.all()
     serializer_class = serializers.DestinationSerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
@@ -24,6 +24,12 @@ class DestinationViewSet(viewsets.ModelViewSet):
     lookup_field = 'slug'
 
     def list(self, request, *args, **kwargs):
+        destination_id = request.GET.get("destination")
+        user_id = request.GET.get("user")
+        q = Q(posts__isnull=False)
+        if user_id:
+            q = q & Q(posts__user__id=int(user_id))
+        self.queryset = self.queryset.filter(q).order_by('?').distinct()
         return super(DestinationViewSet, self).list(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):

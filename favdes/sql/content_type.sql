@@ -119,9 +119,7 @@ FROM (
                     FROM (
                              SELECT *
                              FROM media_media
-                                      JOIN destination_destination_photos
-                                           ON media_media.id = destination_destination_photos.media_id
-                             WHERE destination_destination_photos.destination_id = destination_destination.id
+                                      JOIN destination_destination_medias ddm on media_media.id = ddm.media_id
                              LIMIT 5
                          ) t
                 )                                                                                  AS medias

@@ -1,12 +1,15 @@
 from apps.destination import models
 from rest_framework import serializers
 from apps.media.api.serializers import MediaSerializer
+from apps.media.models import Media
 
 
 class DestinationSerializer(serializers.ModelSerializer):
+    temp_media = serializers.SerializerMethodField()
+
     class Meta:
         model = models.Destination
-        fields = ['id', 'title', 'slug', 'description', 'user', 'address', 'medias', 'contact']
+        fields = ['id', 'title', 'slug', 'description', 'user', 'address', 'medias', 'contact', 'temp_media']
         extra_kwargs = {
             'slug': {'read_only': True}
         }
@@ -15,6 +18,10 @@ class DestinationSerializer(serializers.ModelSerializer):
         self.fields['medias'] = MediaSerializer(many=True, read_only=True)
         self.fields['address'] = AddressSerializer(read_only=True)
         return super(DestinationSerializer, self).to_representation(instance)
+
+    def get_temp_media(self, instance):
+        media = Media.objects.filter(posts__destination=instance).first()
+        return MediaSerializer(media).data
 
 
 class AddressSerializer(serializers.ModelSerializer):

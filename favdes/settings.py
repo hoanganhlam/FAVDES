@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'rest_auth.registration',
     'generic_relations',
+    'django_crontab',
     'apps.general',
     'apps.media',
     'apps.destination',
@@ -134,8 +135,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('POSTGRES_DBNAME', 'favdes'),
         'USER': os.getenv('POSTGRES_USER', 'lam'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'trip.vn'),
-        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'HoangAnhLam@no99a'),
+        'HOST': os.getenv('POSTGRES_HOST', '209.97.166.85'),
         'PORT': os.getenv('POSTGRES_PORT', '5432'),
     }
 }
@@ -228,14 +229,18 @@ REST_AUTH_REGISTER_SERIALIZERS = {
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
-AWS_STORAGE_BUCKET_NAME = 'public'
+AWS_STORAGE_BUCKET_NAME = 'favdes'
 AWS_BUCKET_ACL = 'public-read'
 AWS_DEFAULT_ACL = 'public-read'
 AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME') or 'sgp1'
-AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL') or 'https://ware.sgp1.digitaloceanspaces.com'
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID') or 'DL5VECYYDBFH7DNDZYKW'
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY') or 'ZikZHXpG2bZXzCo+7ZM7IXpjJzsZGgNyJUaQqgK5Td0'
+AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL') or 'https://bubblask.sgp1.digitaloceanspaces.com'
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID') or 'AAONGXRBJP5L2P4GKU2U'
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY') or 'XQq7p23g0CQ/p12+vAGFca92IJF8+rzDJSwIub4Sd4E'
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 THUMBNAIL_FORCE_OVERWRITE = True
 THUMBNAIL_BACKEND = 'apps.media.backend.CThumbnailBackend'
+
+CRONJOBS = [
+    ('* * * * *', 'apps.general.tasks.my_cron_job', '>> /tmp/scheduled_job.log')
+]

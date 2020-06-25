@@ -84,7 +84,7 @@ def get_parent(ids):
 def get_addresses(search):
     addresses = []
     if search:
-        search_address = d_models.SearchAddress.objects.filter(search_keyword=search, address__isnull=False).first()
+        search_address = d_models.SearchAddress.objects.filter(search_keyword=search, addresses__isnull=False).first()
         # Make Address
         if search_address is None:
             results = get_address(search)
@@ -94,3 +94,18 @@ def get_addresses(search):
         else:
             addresses.append(search_address.address)
     return addresses
+
+
+def get_paginator(request):
+    is_manage = request.GET.get('is_manage') is not None and request.GET.get('is_manage') == "true"
+    search = request.GET.get('search')
+    page_size = 10 if request.GET.get('page_size') is None else int(request.GET.get('page_size'))
+    page = 1 if request.GET.get('page') is None else int(request.GET.get('page'))
+    offs3t = page_size * page - page_size
+    return {
+        "is_manage": is_manage and request.user.is_staff,
+        "search": search,
+        "page_size": page_size,
+        "page": page,
+        "offs3t": offs3t
+    }

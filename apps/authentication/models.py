@@ -10,5 +10,5 @@ class Profile(models.Model):
     description = models.CharField(max_length=200, null=True, blank=True)
     media = models.ForeignKey(Media, related_name='profile', on_delete=models.SET_NULL, null=True, blank=True)
     social = JSONField(blank=True, null=True)
-    setting = JSONField(blank=True, null=True)
+    options = JSONField(blank=True, null=True)
     source = JSONField(null=True, blank=True)

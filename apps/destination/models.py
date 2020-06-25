@@ -12,9 +12,9 @@ from apps.general.models import Taxonomy
 class Address(interface.BaseModel):
     address_components = ArrayField(JSONField(blank=True, null=True), blank=True, null=True)
     geometry = JSONField(blank=True, null=True)
-    formatted_address = models.CharField(max_length=220, blank=True, null=True)
-    place_id = models.CharField(max_length=200, null=True, blank=True, unique=True)
-    types = ArrayField(models.CharField(max_length=200), null=True, blank=True)
+    formatted_address = models.CharField(max_length=250, blank=True, null=True)
+    place_id = models.CharField(max_length=250, null=True, blank=True, unique=True)
+    types = ArrayField(models.CharField(max_length=250), null=True, blank=True)
 
     def __str__(self):
         return str(self.id) + ' - ' + self.formatted_address

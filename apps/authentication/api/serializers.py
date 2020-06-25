@@ -3,8 +3,6 @@ from django.contrib.auth.models import User
 from apps.authentication.models import Profile
 from rest_auth.registration.serializers import RegisterSerializer
 from apps.media.api.serializers import MediaSerializer
-from apps.activity.models import Follow, Activity
-from django.contrib.contenttypes.models import ContentType
 
 
 class ProfileSerializer(serializers.ModelSerializer):

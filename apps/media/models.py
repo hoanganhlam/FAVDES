@@ -8,7 +8,7 @@ from sorl.thumbnail import ImageField
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import JSONField
 from django.core.files.temp import NamedTemporaryFile
-from urllib.request import urlopen, urlparse, Request
+from urllib.request import urlparse
 import requests
 from django.core.files import File
 
@@ -41,22 +41,27 @@ class MediaManager(models.Manager):
     def save_url(self, url, **extra_fields):
         name = urlparse(url).path.split('/')[-1]
         temp = NamedTemporaryFile(delete=True)
-        req = requests.get(url=url, headers={'User-Agent': 'Mozilla/5.0'}, allow_redirects=True)
-        disposition = req.headers.get("Content-Disposition")
-        if disposition:
-            test = disposition.split("=")
-            if len(test) > 1:
-                name = test[1].replace("\"", "")
-        temp.write(req.content)
-        ext = name.split('.')[-1]
-        if ext == '':
-            ext = 'jpg'
-            name = name + '.' + ext
-        if ext in ['jpg', 'jpeg', 'png']:
-            temp.flush()
-            img = self.model(title=name)
-            img.path.save(name, File(temp))
-            return img
+        try:
+            req = requests.get(url=url, headers={'User-Agent': 'Mozilla/5.0'}, allow_redirects=True)
+            if req.status_code == 200:
+                disposition = req.headers.get("Content-Disposition")
+                if disposition:
+                    test = disposition.split("=")
+                    if len(test) > 1:
+                        name = test[1].replace("\"", "")
+                temp.write(req.content)
+                ext = name.split('.')[-1]
+                if ext == '':
+                    ext = 'jpg'
+                    name = name + '.' + ext
+                if ext in ['jpg', 'jpeg', 'png']:
+                    temp.flush()
+                    img = self.model(title=name, source_url=url)
+                    img.path.save(name, File(temp))
+                    return img
+        except Exception as e:
+            print(e)
+            pass
         return None
 
 
@@ -71,6 +76,8 @@ class Media(BaseModel):
     user = models.ForeignKey(User, related_name='medias', on_delete=models.SET_NULL, blank=True, null=True)
     taxonomies = models.ManyToManyField(MediaTaxonomy, related_name='medias', blank=True)
     voters = models.ManyToManyField(User, blank=True, related_name='voted_medias')
+    source_url = models.CharField(max_length=260, null=True, blank=True)
+    properties = JSONField(null=True, blank=True)
 
     objects = MediaManager()
 
