@@ -70,7 +70,7 @@ class UserViewSet(viewsets.ModelViewSet):
 class UserExt(views.APIView):
     @api_view(['GET'])
     @permission_classes((IsAuthenticated,))
-    def get_request_user(self, request, format=None):
+    def get_request_user(request, format=None):
         with connection.cursor() as cursor:
             cursor.execute("SELECT FETCH_USER(%s)", [request.user.id])
             out = cursor.fetchone()[0]

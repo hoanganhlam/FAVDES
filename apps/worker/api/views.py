@@ -154,17 +154,3 @@ def reverse_geocode(request):
 def test(request):
     get_parent("ChIJnSO0gLF5zDYRRDXCO6dzo7c")
     return Response({})
-
-# def test(request):
-#     url = "https://instagram.fhan1-1.fna.fbcdn.net/v/t51.2885-15/e35/76886189_580077459204860_3869828130800627167_n.jpg?_nc_ht=instagram.fhan1-1.fna.fbcdn.net&_nc_cat=108&_nc_ohc=J_HSTGbR1SEAX-GxNrn&se=7&oh=aa33e569e38ada5c2b43a4d1082c8181&oe=5E8FBDC8&ig_cache_key=MjIwMjk5Mjc0ODg5Mzk0NDM1MA%3D%3D.2"
-#     img_temp = NamedTemporaryFile(delete=True)
-#     img_temp.write(urlopen(url).read())
-#     name = urlparse(url).path.split('/')[-1]
-#     print(name)
-#     ext = name.split('.')[-1]
-#     if ext in ['jpg', 'jpeg', 'png']:
-#         img_temp.flush()
-#         img = Media(title=name)
-#         img.path.save(name, File(img_temp))
-#         print(img)
-#     return Response([])
