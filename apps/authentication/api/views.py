@@ -62,8 +62,12 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_USER_BY_USERNAME(%s)", [kwargs.get("username")])
-            out = cursor.fetchone()[0]
+            try:
+                cursor.execute("SELECT FETCH_USER_BY_USERNAME(%s)", [kwargs.get("username")])
+                out = cursor.fetchone()[0]
+            finally:
+                cursor.close()
+                connection.close()
         return Response(out, status=status.HTTP_200_OK)
 
 
@@ -72,8 +76,12 @@ class UserExt(views.APIView):
     @permission_classes((IsAuthenticated,))
     def get_request_user(request, format=None):
         with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_USER(%s)", [request.user.id])
-            out = cursor.fetchone()[0]
+            try:
+                cursor.execute("SELECT FETCH_USER(%s)", [request.user.id])
+                out = cursor.fetchone()[0]
+            finally:
+                cursor.close()
+                connection.close()
         return Response(out, status=status.HTTP_200_OK)
 
 

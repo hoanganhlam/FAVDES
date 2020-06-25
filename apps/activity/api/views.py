@@ -58,24 +58,32 @@ class ActivityViewSet(viewsets.ModelViewSet):
         p = get_paginator(request)
         auth_id = self.request.user.id if self.request.user.is_authenticated else None
         with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_ACTIVITIES(%s, %s, %s, %s, %s, %s, %s, %s)",
-                           [
-                               p.get("page_size"),
-                               p.get("offs3t"),
-                               target_content_id,
-                               target_id,
-                               auth_id,
-                               destination_id,
-                               address_id,
-                               '{' + hash_tag + '}' if hash_tag else None
-                           ])
-            return Response(cursor.fetchone()[0])
+            try:
+                cursor.execute("SELECT FETCH_ACTIVITIES(%s, %s, %s, %s, %s, %s, %s, %s)",
+                               [
+                                   p.get("page_size"),
+                                   p.get("offs3t"),
+                                   target_content_id,
+                                   target_id,
+                                   auth_id,
+                                   destination_id,
+                                   address_id,
+                                   '{' + hash_tag + '}' if hash_tag else None
+                               ])
+                return Response(cursor.fetchone()[0])
+            finally:
+                cursor.close()
+                connection.close()
 
     def retrieve(self, request, *args, **kwargs):
         user_id = self.request.user.id if self.request.user.is_authenticated else None
         with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_ACTION(%s, %s)", [kwargs.get("pk"), user_id])
-            out = cursor.fetchone()[0]
+            try:
+                cursor.execute("SELECT FETCH_ACTION(%s, %s)", [kwargs.get("pk"), user_id])
+                out = cursor.fetchone()[0]
+            finally:
+                cursor.close()
+                connection.close()
         return Response(out)
 
 

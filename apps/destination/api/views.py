@@ -29,18 +29,22 @@ class DestinationViewSet(viewsets.ModelViewSet):
         p = get_paginator(request)
         auth_id = request.user.id if request.user.is_authenticated else None
         with connection.cursor() as cursor:
-            cursor.execute("SELECT FETCH_DESTINATIONS(%s, %s, %s, %s, %s, %s, %s)",
-                           [
-                               p.get("page_size"),
-                               p.get("offs3t"),
-                               p.get("search"),
-                               auth_id,
-                               '{' + hash_tag + '}' if hash_tag else None,
-                               user_id,
-                               destination_id,
+            try:
+                cursor.execute("SELECT FETCH_DESTINATIONS(%s, %s, %s, %s, %s, %s, %s)",
+                               [
+                                   p.get("page_size"),
+                                   p.get("offs3t"),
+                                   p.get("search"),
+                                   auth_id,
+                                   '{' + hash_tag + '}' if hash_tag else None,
+                                   user_id,
+                                   destination_id,
 
-                           ])
-            return Response(cursor.fetchone()[0])
+                               ])
+                return Response(cursor.fetchone()[0])
+            finally:
+                cursor.close()
+                connection.close()
 
     def create(self, request, *args, **kwargs):
         return super(DestinationViewSet, self).create(request, *args, **kwargs)
