@@ -8,14 +8,13 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.db.models import Q, Count
 import datetime
-
-
-# from datetime import datetime
+from utils.other import get_paginator
+from django.db import connection
 
 
 class DestinationViewSet(viewsets.ModelViewSet):
     models = models.Destination
-    queryset = models.objects.all()
+    queryset = models.objects.order_by("-id")
     serializer_class = serializers.DestinationSerializer
     permission_classes = permissions.AllowAny,
     pagination_class = pagination.Pagination
@@ -26,11 +25,22 @@ class DestinationViewSet(viewsets.ModelViewSet):
     def list(self, request, *args, **kwargs):
         destination_id = request.GET.get("destination")
         user_id = request.GET.get("user")
-        q = Q(posts__isnull=False)
-        if user_id:
-            q = q & Q(posts__user__id=int(user_id))
-        self.queryset = self.queryset.filter(q).order_by('?').distinct()
-        return super(DestinationViewSet, self).list(request, *args, **kwargs)
+        hash_tag = self.request.GET.get('hash_tag')
+        p = get_paginator(request)
+        auth_id = request.user.id if request.user.is_authenticated else None
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT FETCH_DESTINATIONS(%s, %s, %s, %s, %s, %s, %s)",
+                           [
+                               p.get("page_size"),
+                               p.get("offs3t"),
+                               p.get("search"),
+                               auth_id,
+                               '{' + hash_tag + '}' if hash_tag else None,
+                               user_id,
+                               destination_id,
+
+                           ])
+            return Response(cursor.fetchone()[0])
 
     def create(self, request, *args, **kwargs):
         return super(DestinationViewSet, self).create(request, *args, **kwargs)

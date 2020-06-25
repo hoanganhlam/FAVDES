@@ -3,11 +3,11 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from base import pagination
 from . import serializers
 from apps.general.models import Taxonomy
-from apps.authentication.api.serializers import UserSerializer
 from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from django.db import connection
 
 
 class TaxonomyViewSet(viewsets.ModelViewSet):
@@ -38,4 +38,9 @@ def get_config(request):
 
 @api_view(['GET'])
 def random_user(request):
-    return Response(UserSerializer(User.objects.order_by('?').first()).data)
+    u = User.objects.order_by('?').first()
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT FETCH_USER(%s)", [u.id])
+        out = cursor.fetchone()[0]
+    return Response(out)
+

@@ -13,6 +13,7 @@ from rest_framework.filters import OrderingFilter
 from rest_framework_jwt.settings import api_settings
 from apps.authentication.models import Profile
 from apps.media.models import Media
+from django.db import connection
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -60,18 +61,20 @@ class UserViewSet(viewsets.ModelViewSet):
         return super(UserViewSet, self).list(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
-        self.serializer_class = UserDetailSerializer
-        return super(UserViewSet, self).retrieve(request, *args, **kwargs)
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT FETCH_USER_BY_USERNAME(%s)", [kwargs.get("username")])
+            out = cursor.fetchone()[0]
+        return Response(out, status=status.HTTP_200_OK)
 
 
 class UserExt(views.APIView):
     @api_view(['GET'])
     @permission_classes((IsAuthenticated,))
-    def get_request_user(request, format=None):
-        user = User.objects.get(pk=request.user.id)
-        serializer = UserSerializer(user, context={'request': request})
-        response = serializer.data
-        return Response(response, status=status.HTTP_200_OK)
+    def get_request_user(self, request, format=None):
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT FETCH_USER(%s)", [request.user.id])
+            out = cursor.fetchone()[0]
+        return Response(out, status=status.HTTP_200_OK)
 
 
 class FacebookLogin(SocialLoginView):

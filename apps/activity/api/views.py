@@ -7,7 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from apps.activity import action
-from apps.destination.models import Address, Destination
+from apps.destination.models import Destination
 from django.contrib.auth.models import User
 from apps.authentication.models import Profile
 from apps.media.models import Media
