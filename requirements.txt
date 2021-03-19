@@ -14,7 +14,7 @@ django-crontab==0.7.1
 django-filter==2.2.0
 django-rest-auth==0.9.5
 django-storages==1.8
-djangorestframework==3.11.0
+djangorestframework==3.11.2
 djangorestframework-jwt==1.11.0
 docutils==0.15.2
 ftfy==5.6
